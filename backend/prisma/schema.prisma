@@ -1,0 +1,185 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ========================
+// USERS
+// ========================
+model User {
+  id           BigInt      @id @default(autoincrement())
+  name         String      @db.VarChar(100)
+  email        String      @unique @db.VarChar(150)
+  passwordHash String      @db.VarChar(255)
+  plan         PlanType
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+
+  projects     Project[]
+}
+
+enum PlanType {
+  free
+  pro
+  enterprise
+}
+
+// ========================
+// PROJECTS
+// ========================
+model Project {
+  id             BigInt    @id @default(autoincrement())
+  userId         BigInt
+  name           String    @db.VarChar(100)
+  description    String?   @db.Text
+  retentionDays  Int       @default(7)
+  createdAt      DateTime  @default(now())
+
+  user           User      @relation(fields: [userId], references: [id])
+  sources        Source[]
+  destinations   Destination[]
+  events         Event[]
+
+  @@index([name])
+}
+
+// ========================
+// SOURCES
+// ========================
+model Source {
+  id          BigInt    @id @default(autoincrement())
+  projectId   BigInt
+  name        String    @db.VarChar(100)
+  token       String    @unique @db.VarChar(64)
+  urlPath     String    @db.VarChar(255)
+  status      SourceStatus
+  createdAt   DateTime  @default(now())
+
+  project     Project   @relation(fields: [projectId], references: [id])
+  events      Event[]
+
+  @@index([name])
+}
+
+enum SourceStatus {
+  active
+  disabled
+}
+
+// ========================
+// DESTINATIONS
+// ========================
+model Destination {
+  id           BigInt     @id @default(autoincrement())
+  projectId    BigInt
+  name         String     @db.VarChar(100)
+  url          String     @db.VarChar(500)
+  secret       String     @db.VarChar(128)
+  retryPolicy  Json
+  timeoutMs    Int        @default(5000)
+  status       DestinationStatus
+  createdAt    DateTime   @default(now())
+
+  project        Project        @relation(fields: [projectId], references: [id])
+  deliveries     Delivery[]
+  transformations Transformation[]
+}
+
+enum DestinationStatus {
+  active
+  disabled
+}
+
+// ========================
+// EVENTS
+// ========================
+model Event {
+  id            BigInt     @id @default(autoincrement())
+  sourceId      BigInt
+  projectId     BigInt
+  eventUid      String     @db.VarChar(64)
+  payload       Json
+  headers       Json
+  status        EventStatus
+  receivedAt    DateTime   @default(now())
+  completedAt   DateTime?
+  retryCount    Int        @default(0)
+
+  project       Project     @relation(fields: [projectId], references: [id])
+  source        Source      @relation(fields: [sourceId], references: [id])
+  deliveries    Delivery[]
+  webhookLogs   WebhookLog[]
+}
+
+enum EventStatus {
+  received
+  processing
+  completed
+  failed
+  discarded
+}
+
+// ========================
+// DELIVERIES
+// ========================
+model Delivery {
+  id             BigInt    @id @default(autoincrement())
+  eventId        BigInt
+  destinationId  BigInt
+  attemptNo      Int
+  responseStatus Int?
+  responseBody   String?   @db.Text
+  errorMessage   String?   @db.Text
+  deliveredAt    DateTime  @default(now())
+  nextRetryAt    DateTime?
+  final          Boolean   @default(false)
+  durationMs     Int?
+
+  event          Event       @relation(fields: [eventId], references: [id])
+  destination    Destination @relation(fields: [destinationId], references: [id])
+  webhookLogs    WebhookLog[]
+}
+
+// ========================
+// TRANSFORMATIONS
+// ========================
+model Transformation {
+  id             BigInt    @id @default(autoincrement())
+  destinationId  BigInt
+  type           TransformationType
+  script         String    @db.Text
+  createdAt      DateTime  @default(now())
+
+  destination    Destination @relation(fields: [destinationId], references: [id])
+}
+
+enum TransformationType {
+  filter
+  map
+  transform
+}
+
+// ========================
+// WEBHOOK LOGS
+// ========================
+model WebhookLog {
+  id           BigInt     @id @default(autoincrement())
+  eventId      BigInt
+  deliveryId   BigInt
+  logType      LogType
+  message      String     @db.Text
+  createdAt    DateTime   @default(now())
+
+  event        Event       @relation(fields: [eventId], references: [id])
+  delivery     Delivery    @relation(fields: [deliveryId], references: [id])
+}
+
+enum LogType {
+  info
+  warning
+  error
+}

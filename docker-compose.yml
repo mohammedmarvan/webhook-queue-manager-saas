@@ -1,0 +1,45 @@
+version: "3.9"
+
+services:
+  # backend:
+  #   build: ./backend
+  #   container_name: webhook_backend
+  #   ports:
+  #     - "4000:4000"
+  #   env_file: .env
+  #   depends_on:
+  #     - postgres
+  #   networks:
+  #     - webhook_net
+
+  # frontend:
+  #   build: ./frontend
+  #   container_name: webhook_frontend
+  #   ports:
+  #     - "3000:3000"
+  #   depends_on:
+  #     - backend
+  #   networks:
+  #     - webhook_net
+
+  postgres:
+    image: postgres:15
+    container_name: webhook_postgres
+    restart: always
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    ports:
+      - "${DB_PORT}:5432"
+    networks:
+      - webhook_net
+
+volumes:
+  db_data:
+
+networks:
+  webhook_net:
+    driver: bridge

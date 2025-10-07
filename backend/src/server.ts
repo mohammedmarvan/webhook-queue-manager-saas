@@ -1,0 +1,18 @@
+// Load environment variables first
+import "./config/env"; 
+
+import app from './app';
+import logger from './config/logger';
+
+async function start() {
+  try {
+    app.listen(process.env.API_PORT, () => {
+      logger.info(`Server listening on http://localhost:${process.env.API_PORT}`);
+    });
+  } catch (err: any) {
+    logger.error(`Startup failed: ${err.message}`);
+    process.exit(1);
+  }
+}
+
+start();
