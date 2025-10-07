@@ -1,11 +1,19 @@
 // Load environment variables first
-import "./config/env"; 
+import './config/env';
 
 import app from './app';
 import logger from './config/logger';
+import { connectRedis } from './config/redis';
 
 async function start() {
   try {
+    // Starting application
+    logger.info(`Starting the application`);
+
+    // Check the redis connection
+    logger.info(`Conneting to Redis`);
+    await connectRedis();
+
     app.listen(process.env.API_PORT, () => {
       logger.info(`Server listening on http://localhost:${process.env.API_PORT}`);
     });

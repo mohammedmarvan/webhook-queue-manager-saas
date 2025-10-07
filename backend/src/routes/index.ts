@@ -1,14 +1,14 @@
 import { Router, Request, Response, NextFunction } from 'express';
 
 import incomingRoutesHandler from './incoming.routes';
-import { NotFoundError } from '../errors/notFoundError';
+import { NotFoundError } from '../errors/not-found-error';
 
 const router = Router();
 
 router.use('/incoming', incomingRoutesHandler);
 
 router.use((req: Request, res: Response, next: NextFunction) => {
-    next(new NotFoundError(`Route ${req.originalUrl} not found`));
-})
+  next(new NotFoundError(`Route ${req.originalUrl} not found`));
+});
 
 export default router;

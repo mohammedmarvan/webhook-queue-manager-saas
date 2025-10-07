@@ -1,6 +1,6 @@
 import dotenv from 'dotenv';
 import path from 'path';
-import dotenvExpand from "dotenv-expand";
+import dotenvExpand from 'dotenv-expand';
 import fs from 'fs';
 
 const homeEnv = dotenv.config({ path: path.resolve(process.cwd() + '/../' || '', '.env') });

@@ -101,7 +101,7 @@ model Event {
   id            BigInt     @id @default(autoincrement())
   sourceId      BigInt
   projectId     BigInt
-  eventUid      String     @db.VarChar(64)
+  eventUid      String     @default(uuid()) @db.Uuid @unique
   payload       Json
   headers       Json
   status        EventStatus
