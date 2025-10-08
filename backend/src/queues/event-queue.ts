@@ -2,7 +2,7 @@ import { BullQueue } from '../config/bull-queue';
 import { Job } from 'bull';
 import { getEventData, updateEvent } from '../db/event-repo';
 import logger from '../config/logger';
-import { getDestinationsByProjectId } from '../db/destination-repo';
+import { getDestinationsByProjectId, getDestinationById } from '../db/destination-repo';
 import { createDelivery, updateDelivery } from '../db/delivery-repo';
 import { sendToDestination } from '../services/webhook-service';
 import { EVENT_STATUS } from '../config/constats';
@@ -10,6 +10,7 @@ import { EVENT_STATUS } from '../config/constats';
 interface EventJob {
   eventUid: string;
   attempt?: number;
+  destinationId?: string;
 }
 
 interface RetryPolicy {
@@ -29,7 +30,14 @@ class EventQueue extends BullQueue<EventJob> {
   }
 
   private async processWork(job: Job) {
-    const eventData = await getEventData(job.data.eventUid);
+    const { eventUid, destinationId, attempt } = job.data;
+
+    if (!eventUid) {
+      logger.error(`No event UID found`);
+      return;
+    }
+
+    const eventData = await getEventData(eventUid);
 
     if (!eventData) {
       logger.error(
@@ -43,7 +51,7 @@ class EventQueue extends BullQueue<EventJob> {
     logger.info(`⚙️ Processing event ${eventData.eventUid}`);
 
     // 1️⃣ Get destinations for this project
-    const destinations = await getDestinationsByProjectId(eventData.projectId);
+    const destinations = await getDestinationsByProjectId(eventData.projectId, destinationId);
     if (!destinations.length) {
       logger.warn(`No active destinations for project ${eventData.projectId}`);
       return;
@@ -54,7 +62,7 @@ class EventQueue extends BullQueue<EventJob> {
       const delivery = await createDelivery({
         eventId: eventData.id,
         destinationId: dest.id,
-        attemptNo: (job.data.attempt || 0) + 1,
+        attemptNo: attempt || 1,
       });
 
       try {
@@ -88,18 +96,8 @@ class EventQueue extends BullQueue<EventJob> {
         logger.error(`❌ Failed to deliver to ${dest.name}: ${err.message}`);
 
         // Retry logic
-        try {
-          const dbPolicy: Partial<RetryPolicy> =
-            typeof dest.retryPolicy === 'string'
-              ? JSON.parse(dest.retryPolicy)
-              : (dest.retryPolicy as Partial<RetryPolicy>);
-          retryPolicy = { ...defaultPolicy, ...dbPolicy };
-        } catch {
-          retryPolicy = defaultPolicy;
-        }
-        const nextAttempt = (job.data.attempt || 1) + 1;
-
-        console.log('retry policy  ', retryPolicy);
+        retryPolicy = this.parsePolicy(dest.retryPolicy);
+        const nextAttempt = (attempt || 1) + 1;
 
         if (nextAttempt <= retryPolicy.maxRetries) {
           const delay = retryPolicy.backoff
@@ -108,7 +106,14 @@ class EventQueue extends BullQueue<EventJob> {
 
           logger.info(`🔁 Retrying ${dest.name} in ${delay}ms (Attempt ${nextAttempt})`);
 
-          await this.addJob({ eventUid: job.data.eventUid, attempt: nextAttempt }, { delay });
+          await this.addJob(
+            {
+              eventUid: job.data.eventUid,
+              destinationId: dest.id.toString(),
+              attempt: nextAttempt,
+            },
+            { delay },
+          );
         } else {
           logger.error(
             `❌ Delivery failed permanently for ${dest.name} after ${retryPolicy.maxRetries} retries`,
@@ -116,6 +121,16 @@ class EventQueue extends BullQueue<EventJob> {
         }
         logger.error(`❌ Failed to deliver to ${dest.name}: ${err.message}`);
       }
+    }
+  }
+
+  private parsePolicy(policy: any) {
+    try {
+      const dbPolicy: Partial<RetryPolicy> =
+        typeof policy === 'string' ? JSON.parse(policy) : (policy as Partial<RetryPolicy>);
+      return { ...defaultPolicy, ...dbPolicy };
+    } catch {
+      return defaultPolicy;
     }
   }
 }

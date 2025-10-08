@@ -6,7 +6,6 @@ export async function addEvent(param: createEventParam) {
   // Insert into the Event table
   const event = await createEvent(param);
 
-  //   console.log('event her  ',event);
   logger.info(`✅ Event inserted: ${event.id}`);
 
   // Push to Bull Queue
