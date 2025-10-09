@@ -1,11 +1,11 @@
-import { error } from "console";
-import { prisma } from "../config/db"
+import { error } from 'console';
+import { prisma } from '../config/db';
 
-const wait = (ms: number) => new Promise(res => setTimeout(res, ms));
+const wait = (ms: number) => new Promise((res) => setTimeout(res, ms));
 
 export async function getDashboardData() {
-  const now = new Date()
-  const since24h = new Date(now.getTime() - 24 * 60 * 60 * 1000)
+  const now = new Date();
+  const since24h = new Date(now.getTime() - 24 * 60 * 60 * 1000);
 
   // Run everything in parallel
   const [
@@ -46,7 +46,7 @@ export async function getDashboardData() {
         GROUP BY hour
         ORDER BY hour
     `),
-  ])
+  ]);
 
   // Transform groupBy results into 0–23 hour buckets
   const initBuckets: {
@@ -57,23 +57,23 @@ export async function getDashboardData() {
     hour: h,
     events: 0,
     deliveries: 0,
-  }))
+  }));
 
-    // Fill events
-    eventsByHour.forEach((row) => {
-        const hour = parseInt(row.hour)
-        if (initBuckets[hour]) {
-            initBuckets[hour].events = Number(row.count)
-        }
-    })
+  // Fill events
+  eventsByHour.forEach((row) => {
+    const hour = parseInt(row.hour);
+    if (initBuckets[hour]) {
+      initBuckets[hour].events = Number(row.count);
+    }
+  });
 
-    // Fill deliveries
-    deliveriesByHour.forEach((row) => {
-        const hour = parseInt(row.hour)
-        if (initBuckets[hour]) {
-            initBuckets[hour].deliveries = Number(row.count)
-        }
-    })
+  // Fill deliveries
+  deliveriesByHour.forEach((row) => {
+    const hour = parseInt(row.hour);
+    if (initBuckets[hour]) {
+      initBuckets[hour].deliveries = Number(row.count);
+    }
+  });
 
   return {
     counts: {
@@ -83,5 +83,5 @@ export async function getDashboardData() {
       deliveriesLast24h,
     },
     hourly: initBuckets,
-  }
+  };
 }

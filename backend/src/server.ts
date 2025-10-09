@@ -1,6 +1,6 @@
 // Load environment variables first
 import './config/env';
-import "./utils/bigint-json"
+import './utils/bigint-json';
 
 import app from './app';
 import logger from './config/logger';

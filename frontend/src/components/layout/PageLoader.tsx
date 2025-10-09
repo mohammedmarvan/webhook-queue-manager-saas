@@ -1,4 +1,4 @@
-import { Spinner } from "@/components/ui/spinner"
+import { Spinner } from '@/components/ui/spinner';
 
 export function PageLoader() {
   return (
@@ -8,5 +8,5 @@ export function PageLoader() {
         <p className="text-sm font-medium text-muted-foreground">Loading...</p>
       </div>
     </div>
-  )
+  );
 }

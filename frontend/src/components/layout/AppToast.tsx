@@ -1,4 +1,4 @@
-import { toast } from "sonner"
+import { toast } from 'sonner';
 
 export const AppToast = {
   success: (message: string) =>
@@ -15,4 +15,4 @@ export const AppToast = {
     toast(message, {
       closeButton: true,
     }),
-}
+};

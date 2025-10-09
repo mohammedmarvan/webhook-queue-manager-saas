@@ -1,8 +1,8 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import Layout from "./components/layout/Layout"
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import Layout from './components/layout/Layout';
 // import Sidebar from "./components/Layout/Sidebar";
-import Dashboard from "./pages/Dashboard";
-import Projects from "./pages/project";
+import Dashboard from './pages/Dashboard';
+import Projects from './pages/project';
 // import Sources from "./pages/Sources";
 // import Destinations from "./pages/Destinations";
 // import Events from "./pages/Events";
@@ -13,9 +13,9 @@ function App() {
     <BrowserRouter>
       <Layout>
         <Routes>
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/project" element={<Projects />} />
-          </Routes>
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/project" element={<Projects />} />
+        </Routes>
       </Layout>
     </BrowserRouter>
   );

@@ -1,17 +1,17 @@
 export interface DashboardResponse {
-    status: boolean
-    message: string
-    data: {
-      counts: {
-        eventsLast24h: number
-        sourcesCount: number
-        destinationsCount: number
-        deliveriesLast24h: number
-      }
-      hourly: {
-        hour: number
-        events: number
-        deliveries: number
-      }[]
-    }
-  }
+  status: boolean;
+  message: string;
+  data: {
+    counts: {
+      eventsLast24h: number;
+      sourcesCount: number;
+      destinationsCount: number;
+      deliveriesLast24h: number;
+    };
+    hourly: {
+      hour: number;
+      events: number;
+      deliveries: number;
+    }[];
+  };
+}

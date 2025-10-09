@@ -1,32 +1,32 @@
-import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from "recharts"
+import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from 'recharts';
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card"
+} from '@/components/ui/card';
 import {
   type ChartConfig,
   ChartContainer,
   ChartTooltip,
   ChartTooltipContent,
-} from "@/components/ui/chart"
+} from '@/components/ui/chart';
 
 interface HourlyChartProps {
-  data: { hour: number; events: number; deliveries: number }[]
+  data: { hour: number; events: number; deliveries: number }[];
 }
 
 const chartConfig = {
   events: {
-    label: "Events",
-    color: "var(--color-events)",
+    label: 'Events',
+    color: 'var(--color-events)',
   },
   deliveries: {
-    label: "Deliveries",
-    color: "var(--color-deliveries)",
+    label: 'Deliveries',
+    color: 'var(--color-deliveries)',
   },
-} satisfies ChartConfig
+} satisfies ChartConfig;
 
 export function HourlyChart({ data }: HourlyChartProps) {
   // Convert hour (0–23) to 12h label like "1 AM"
@@ -34,13 +34,13 @@ export function HourlyChart({ data }: HourlyChartProps) {
     ...d,
     label:
       d.hour === 0
-        ? "12 AM"
+        ? '12 AM'
         : d.hour < 12
-        ? `${d.hour} AM`
-        : d.hour === 12
-        ? "12 PM"
-        : `${d.hour - 12} PM`,
-  }))
+          ? `${d.hour} AM`
+          : d.hour === 12
+            ? '12 PM'
+            : `${d.hour - 12} PM`,
+  }));
 
   return (
     <Card className="@container/card">
@@ -116,5 +116,5 @@ export function HourlyChart({ data }: HourlyChartProps) {
         </ChartContainer>
       </CardContent>
     </Card>
-  )
+  );
 }

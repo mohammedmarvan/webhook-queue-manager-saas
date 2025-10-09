@@ -1,5 +1,12 @@
-import { ArrowDownFromLine, Home, FolderDot, ArrowUpFromLine, Settings, RefreshCcw } from "lucide-react"
-import { SidebarHeaderTitle } from "./SidebarHeaderTitle"
+import {
+  ArrowDownFromLine,
+  Home,
+  FolderDot,
+  ArrowUpFromLine,
+  Settings,
+  RefreshCcw,
+} from 'lucide-react';
+import { SidebarHeaderTitle } from './SidebarHeaderTitle';
 
 import {
   Sidebar,
@@ -9,46 +16,46 @@ import {
   SidebarGroupLabel,
   SidebarMenu,
   SidebarMenuButton,
-  SidebarMenuItem
-} from "@/components/ui/sidebar"
+  SidebarMenuItem,
+} from '@/components/ui/sidebar';
 
 // Menu items.
 const items = [
   {
-    title: "Dashboard",
-    url: "/dashboard",
+    title: 'Dashboard',
+    url: '/dashboard',
     icon: Home,
   },
   {
-    title: "Project",
-    url: "/project",
+    title: 'Project',
+    url: '/project',
     icon: FolderDot,
   },
   {
-    title: "Sources",
-    url: "#",
+    title: 'Sources',
+    url: '#',
     icon: ArrowDownFromLine,
   },
   {
-    title: "Destinations",
-    url: "#",
+    title: 'Destinations',
+    url: '#',
     icon: ArrowUpFromLine,
   },
   {
-    title: "Events",
-    url: "#",
+    title: 'Events',
+    url: '#',
     icon: Settings,
   },
   {
-    title: "Logs",
-    url: "#",
+    title: 'Logs',
+    url: '#',
     icon: RefreshCcw,
   },
-]
+];
 
 export function AppSidebar() {
   return (
-    <Sidebar collapsible="icon" >
+    <Sidebar collapsible="icon">
       <SidebarHeaderTitle />
       <SidebarContent>
         <SidebarGroup>
@@ -70,5 +77,5 @@ export function AppSidebar() {
         </SidebarGroup>
       </SidebarContent>
     </Sidebar>
-  )
+  );
 }
