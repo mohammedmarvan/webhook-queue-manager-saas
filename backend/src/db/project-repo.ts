@@ -41,7 +41,10 @@ export const getProjects = async (params: tableSearchParam) => {
 };
 
 export const getProjectById = async (projectId: bigint) => {
-  return await prisma.project.findUnique({ where: { id: projectId } });
+  return await prisma.project.findUnique({
+    where: { id: projectId },
+    include: { sources: true, destinations: true },
+  });
 };
 
 export const createProject = async (params: projectCreateParam) => {

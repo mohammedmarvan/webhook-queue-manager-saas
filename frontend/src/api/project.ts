@@ -16,3 +16,15 @@ export async function deleteProject(id: string | number) {
 
   return res.data;
 }
+
+export async function getProject(projectId: string) {
+  const res = await api.get(`/projects/${projectId}`);
+
+  return res.data;
+}
+
+export async function updateProject(data: Project) {
+  const res = await api.put(`/projects/${data.id}`, data);
+
+  return res.data;
+}

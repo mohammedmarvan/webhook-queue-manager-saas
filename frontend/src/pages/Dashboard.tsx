@@ -12,9 +12,10 @@ import { AppToast } from '@/components/layout/AppToast';
 import { Activity, Database, Send, Package } from 'lucide-react';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { HourlyChart } from '@/components/dashboard/HourlyChart';
+import { type DashboardData } from '@/types/dashboard';
 
 export default function Dashboard() {
-  const [data, setData] = useState<unknown | null>(null);
+  const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {

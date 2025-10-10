@@ -14,7 +14,7 @@ import { PageLoader } from '../layout/PageLoader';
 import { AppToast } from '../layout/AppToast';
 import { SearchX } from 'lucide-react';
 
-interface Column<T> {
+export interface Column<T> {
   key: keyof T;
   label: string;
 }
@@ -26,15 +26,17 @@ interface CommonTableProps<T> {
   renderActions?: (row: T) => React.ReactNode;
   pageSize?: number;
   refreshKey?: number;
+  headerActions?: React.ReactNode;
 }
 
-export function CommonTable<T extends { id: string | number }>({
+export function CommonTable<T extends { id?: string | number }>({
   endpoint,
   columns,
   searchPlaceholder = 'Search...',
   renderActions,
   pageSize = 10,
   refreshKey = 0,
+  headerActions,
 }: CommonTableProps<T>) {
   const [data, setData] = useState<T[]>([]);
   const [search, setSearch] = useState('');
@@ -84,7 +86,7 @@ export function CommonTable<T extends { id: string | number }>({
   return (
     <div className="space-y-4">
       {/* Search */}
-      <div className="flex justify-between">
+      <div className="flex justify-between items-center">
         <Input
           placeholder={searchPlaceholder}
           value={search}
@@ -94,6 +96,8 @@ export function CommonTable<T extends { id: string | number }>({
           }}
           className="w-1/3"
         />
+
+        <div className="flex space-x-2">{headerActions}</div>
       </div>
 
       {/* Table */}

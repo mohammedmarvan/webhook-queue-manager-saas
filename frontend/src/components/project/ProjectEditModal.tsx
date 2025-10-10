@@ -1,0 +1,119 @@
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+  DialogDescription,
+} from '@/components/ui/dialog';
+import { Textarea } from '@/components/ui/textarea';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { useState, useEffect } from 'react';
+import { Label } from '@/components/ui/label';
+import { type ProjectData, type ProjectModalProps } from '@/types/project';
+
+export const ProjectModal: React.FC<ProjectModalProps> = ({
+  open,
+  onClose,
+  initialData,
+  onSave,
+}) => {
+  const [form, setForm] = useState<ProjectData>({
+    id: '',
+    name: '',
+    description: '',
+    retentionDays: 7,
+    status: 'active',
+  });
+
+  useEffect(() => {
+    if (initialData) {
+      setForm(initialData);
+    } else {
+      setForm({
+        id: '',
+        name: '',
+        description: '',
+        retentionDays: 7,
+        status: 'active',
+      });
+    }
+  }, [initialData]);
+
+  const handleChange = (field: keyof ProjectData, value: string | number) => {
+    setForm((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const handleSubmit = () => {
+    onSave(form);
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onClose}>
+      <DialogContent className="sm:max-w-[425px]">
+        <DialogHeader>
+          <DialogTitle>
+            {initialData ? 'Edit Project' : 'Add New Project'}
+          </DialogTitle>
+          <DialogDescription className="py-2">
+            {initialData
+              ? "Edit project details here. Click save when you're done."
+              : 'Fill in the details to create a new project.'}
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="grid gap-4">
+          <div className="grid gap-3">
+            <Label htmlFor="name" className="font-bold">
+              Name
+            </Label>
+            <Input
+              id="name"
+              placeholder="Project Name"
+              value={form.name}
+              onChange={(e) => handleChange('name', e.target.value)}
+            />
+          </div>
+
+          <div className="grid gap-3">
+            <Label htmlFor="description" className="font-bold">
+              Description
+            </Label>
+            <Textarea
+              id="description"
+              placeholder="Optional description"
+              value={form.description ?? ''}
+              onChange={(e) => handleChange('description', e.target.value)}
+              className="min-h-[100px]" // optional: control height
+            />
+          </div>
+
+          <div className="grid gap-3">
+            <Label htmlFor="retentionDays" className="font-bold">
+              Retention Days
+            </Label>
+            <Input
+              id="retentionDays"
+              type="number"
+              min={1}
+              value={form.retentionDays}
+              onChange={(e) =>
+                handleChange('retentionDays', parseInt(e.target.value, 10))
+              }
+            />
+          </div>
+        </div>
+
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose}>
+            Cancel
+          </Button>
+          <Button onClick={handleSubmit}>
+            {initialData ? 'Save Changes' : 'Add Project'}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+};

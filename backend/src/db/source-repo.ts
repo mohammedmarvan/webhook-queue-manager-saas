@@ -14,7 +14,7 @@ export const getActiveSource = async (sourceMap: string, projectId?: number | bi
   const source = await prisma.source.findFirst({
     where: {
       OR: [{ token: sourceMap }, { urlPath: sourceMap }],
-      ...(projectId !== undefined ? { projectId } : {}),
+      ...(projectId !== undefined ? { projectId, status: 'active' } : { status: 'active' }),
     },
   });
 

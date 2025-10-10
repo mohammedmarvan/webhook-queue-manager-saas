@@ -8,6 +8,7 @@ export interface projectCreateParam {
   name: string;
   userId: bigint;
   description?: string;
+  retentionDays?: number;
 }
 
 export type projectUpdateParam = Partial<Omit<projectCreateParam, 'userId'>>;

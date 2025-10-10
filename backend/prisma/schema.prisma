@@ -59,7 +59,7 @@ model Source {
   status      SourceStatus
   createdAt   DateTime  @default(now())
 
-  project     Project   @relation(fields: [projectId], references: [id])
+  project     Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
   events      Event[]
 
   @@index([name])
@@ -84,7 +84,7 @@ model Destination {
   status       DestinationStatus
   createdAt    DateTime   @default(now())
 
-  project        Project        @relation(fields: [projectId], references: [id])
+  project        Project        @relation(fields: [projectId], references: [id], onDelete: Cascade)
   deliveries     Delivery[]
   transformations Transformation[]
 }
@@ -109,8 +109,8 @@ model Event {
   completedAt   DateTime?
   retryCount    Int        @default(0)
 
-  project       Project     @relation(fields: [projectId], references: [id])
-  source        Source      @relation(fields: [sourceId], references: [id])
+  project       Project     @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  source        Source      @relation(fields: [sourceId], references: [id], onDelete: Cascade)
   deliveries    Delivery[]
   webhookLogs   WebhookLog[]
 }
@@ -139,8 +139,8 @@ model Delivery {
   final          Boolean   @default(false)
   durationMs     Int?
 
-  event          Event       @relation(fields: [eventId], references: [id])
-  destination    Destination @relation(fields: [destinationId], references: [id])
+  event          Event       @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  destination    Destination @relation(fields: [destinationId], references: [id], onDelete: Cascade)
   webhookLogs    WebhookLog[]
 }
 
@@ -154,7 +154,7 @@ model Transformation {
   script         String    @db.Text
   createdAt      DateTime  @default(now())
 
-  destination    Destination @relation(fields: [destinationId], references: [id])
+  destination    Destination @relation(fields: [destinationId], references: [id], onDelete: Cascade)
 }
 
 enum TransformationType {
@@ -174,8 +174,8 @@ model WebhookLog {
   message      String     @db.Text
   createdAt    DateTime   @default(now())
 
-  event        Event       @relation(fields: [eventId], references: [id])
-  delivery     Delivery    @relation(fields: [deliveryId], references: [id])
+  event        Event       @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  delivery     Delivery    @relation(fields: [deliveryId], references: [id], onDelete: Cascade)
 }
 
 enum LogType {

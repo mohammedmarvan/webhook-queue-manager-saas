@@ -3,7 +3,8 @@ import Layout from './components/layout/Layout';
 // import Sidebar from "./components/Layout/Sidebar";
 import Dashboard from './pages/Dashboard';
 import Projects from './pages/project';
-// import Sources from "./pages/Sources";
+import ProjectEdit from './pages/project/[id]';
+import Sources from './pages/source';
 // import Destinations from "./pages/Destinations";
 // import Events from "./pages/Events";
 // import Logs from "./pages/Logs";
@@ -15,6 +16,8 @@ function App() {
         <Routes>
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/project" element={<Projects />} />
+          <Route path="/project/:id/edit" element={<ProjectEdit />} />
+          <Route path="/source" element={<Sources />} />
         </Routes>
       </Layout>
     </BrowserRouter>

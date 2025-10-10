@@ -33,7 +33,7 @@ const items = [
   },
   {
     title: 'Sources',
-    url: '#',
+    url: '/source',
     icon: ArrowDownFromLine,
   },
   {
