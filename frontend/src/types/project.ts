@@ -11,4 +11,5 @@ export interface ProjectModalProps {
   onClose: () => void;
   initialData?: ProjectData; // if editing, pass existing data
   onSave: (data: ProjectData) => void;
+  loading: boolean;
 }

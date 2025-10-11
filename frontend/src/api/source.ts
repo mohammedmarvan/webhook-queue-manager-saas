@@ -11,3 +11,9 @@ export async function createSource(formData: Source) {
 
   return res.data;
 }
+
+export async function deleteSource(sourceId: string | number) {
+  const res = await api.delete(`sources/${sourceId}`);
+
+  return res.data;
+}

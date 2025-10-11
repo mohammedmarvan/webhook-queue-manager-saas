@@ -38,8 +38,13 @@ export const getDestinations = async (params: tableSearchParam) => {
     }),
   ]);
 
+  const mapped = destinations.map((d) => ({
+    ...d,
+    projectName: d.project?.name ?? '',
+  }));
+
   return {
-    data: destinations,
+    data: mapped,
     total,
   };
 };

@@ -18,6 +18,8 @@ import { Input } from '@/components/ui/input';
 import { useState, useEffect } from 'react';
 import { Label } from '@/components/ui/label';
 import { type DestinationData } from '@/types/destination';
+import { PageLoader } from '@/components/layout/PageLoader';
+import { ProjectCombobox } from '../project/ProjectCombobox';
 
 interface DestinationModalProps {
   open: boolean;
@@ -25,6 +27,7 @@ interface DestinationModalProps {
   initialData?: DestinationData; // if editing, pass existing data
   onSave: (data: DestinationData) => void;
   disableProjectId?: boolean;
+  loading: boolean;
 }
 
 export const DestinationModal: React.FC<DestinationModalProps> = ({
@@ -33,6 +36,7 @@ export const DestinationModal: React.FC<DestinationModalProps> = ({
   initialData,
   onSave,
   disableProjectId,
+  loading,
 }) => {
   const [form, setForm] = useState<DestinationData>({
     id: '',
@@ -73,6 +77,12 @@ export const DestinationModal: React.FC<DestinationModalProps> = ({
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[425px]">
+        {/* Loader overlay inside modal */}
+        {loading && (
+          <div className="absolute inset-0 z-50 flex items-center justify-center bg-background/60">
+            <PageLoader />
+          </div>
+        )}
         <DialogHeader>
           <DialogTitle>
             {initialData ? 'Edit Destination' : 'Add New Destination'}
@@ -171,14 +181,9 @@ export const DestinationModal: React.FC<DestinationModalProps> = ({
           </div>
 
           <div className="grid gap-3">
-            <Label htmlFor="project-id" className="font-bold">
-              Project
-            </Label>
-            <Input
-              id="project-id"
-              placeholder="Project ID"
-              value={form.projectId ?? ''}
-              onChange={(e) => handleChange('projectId', e.target.value)}
+            <ProjectCombobox
+              value={form.projectId}
+              onChange={(val) => handleChange('projectId', val)}
               disabled={disableProjectId}
             />
           </div>

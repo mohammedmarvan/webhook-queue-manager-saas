@@ -12,12 +12,14 @@ import { Input } from '@/components/ui/input';
 import { useState, useEffect } from 'react';
 import { Label } from '@/components/ui/label';
 import { type ProjectData, type ProjectModalProps } from '@/types/project';
+import { PageLoader } from '../layout/PageLoader';
 
 export const ProjectModal: React.FC<ProjectModalProps> = ({
   open,
   onClose,
   initialData,
   onSave,
+  loading,
 }) => {
   const [form, setForm] = useState<ProjectData>({
     id: '',
@@ -52,6 +54,13 @@ export const ProjectModal: React.FC<ProjectModalProps> = ({
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[425px]">
+        {/* Loader overlay inside modal */}
+        {loading && (
+          <div className="absolute inset-0 z-50 flex items-center justify-center bg-background/60">
+            <PageLoader />
+          </div>
+        )}
+
         <DialogHeader>
           <DialogTitle>
             {initialData ? 'Edit Project' : 'Add New Project'}

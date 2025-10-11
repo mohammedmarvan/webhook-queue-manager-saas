@@ -11,3 +11,9 @@ export async function updateDestination(data: Destination) {
 
   return res.data;
 }
+
+export async function deleteDestination(destinationId: string | number) {
+  const res = await api.delete(`/destinations/${destinationId}`);
+
+  return res.data;
+}

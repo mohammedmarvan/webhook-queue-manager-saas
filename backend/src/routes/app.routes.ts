@@ -19,6 +19,7 @@ import {
   updateDestinationData,
   deleteDestinationData,
 } from '../controllers/api.controller';
+import { handleDbError } from '../utils/db-error-handler';
 
 const router = Router();
 
@@ -89,8 +90,7 @@ router.post('/projects', async (req, res) => {
     createProjectData({ name, description, userId, retentionDays }),
   );
   if (error) {
-    logger.error(`Error in creating project `, error);
-    return res.status(400).json({ status: false, message: 'Unable to create project', error });
+    return handleDbError(res, error, 'create project');
   }
   res.status(201).json({ status: true, message: 'Project created', data });
 });
@@ -103,8 +103,7 @@ router.put('/projects/:id', async (req, res) => {
     updateProjectData(id, { name, description, retentionDays }),
   );
   if (error) {
-    logger.error(`Error in updating project `, error);
-    return res.status(400).json({ status: false, message: 'Unable to update project', error });
+    return handleDbError(res, error, 'update project');
   }
   res.json({ status: true, message: 'Project updated', data });
 });
@@ -114,8 +113,7 @@ router.delete('/projects/:id', async (req, res) => {
   const id = BigInt(req.params.id);
   const { data, error } = await tryCatch(deleteProjectData(id));
   if (error) {
-    logger.error(`Error in deleting project `, error);
-    return res.status(400).json({ status: false, message: 'Unable to delete project', error });
+    return handleDbError(res, error, 'delete project');
   }
   res.json({ status: true, message: 'Project deleted', data });
 });
@@ -173,8 +171,7 @@ router.post('/sources', async (req, res) => {
     }),
   );
   if (error) {
-    logger.error(`Error in creating the source data `, error);
-    return res.status(400).json({ status: false, message: 'Unable to create source', error });
+    return handleDbError(res, error, 'create source');
   }
   res.status(201).json({ status: true, message: 'Source created', data });
 });
@@ -182,11 +179,12 @@ router.post('/sources', async (req, res) => {
 // Update a source
 router.put('/sources/:id', async (req, res) => {
   const id = BigInt(req.params.id);
-  const { name, urlPath, status } = req.body;
-  const { data, error } = await tryCatch(updateSourceData(id, { name, urlPath, status }));
+  const { name, urlPath, status, token, projectId } = req.body;
+  const { data, error } = await tryCatch(
+    updateSourceData(id, { name, urlPath, status, token, projectId }),
+  );
   if (error) {
-    logger.error(`Error in updating the source data `, error);
-    return res.status(400).json({ status: false, message: 'Unable to update source', error });
+    return handleDbError(res, error, 'update source');
   }
   res.json({ status: true, message: 'Source updated', data });
 });
@@ -196,8 +194,7 @@ router.delete('/sources/:id', async (req, res) => {
   const id = BigInt(req.params.id);
   const { data, error } = await tryCatch(deleteSourceData(id));
   if (error) {
-    logger.error(`Error in deleting the source data `, error);
-    return res.status(400).json({ status: false, message: 'Unable to delete source', error });
+    return handleDbError(res, error, 'delete source');
   }
   res.json({ status: true, message: 'Source deleted', data });
 });
@@ -257,8 +254,7 @@ router.post('/destinations', async (req, res) => {
     }),
   );
   if (error) {
-    logger.error(`Error in updating the destination data `, error);
-    return res.status(400).json({ status: false, message: 'Unable to create destination', error });
+    return handleDbError(res, error, 'create destination');
   }
   res.status(201).json({ status: true, message: 'Destination created', data });
 });
@@ -266,13 +262,12 @@ router.post('/destinations', async (req, res) => {
 // Update a destination
 router.put('/destinations/:id', async (req, res) => {
   const id = BigInt(req.params.id);
-  const { name, url, retryPolicy, timeoutMs, status } = req.body;
+  const { name, url, retryPolicy, timeoutMs, status, projectId, secret } = req.body;
   const { data, error } = await tryCatch(
-    updateDestinationData(id, { name, url, retryPolicy, timeoutMs, status }),
+    updateDestinationData(id, { name, url, retryPolicy, timeoutMs, status, projectId, secret }),
   );
   if (error) {
-    logger.error(`Error in fetching the destination data `, error);
-    return res.status(400).json({ status: false, message: 'Unable to update destination', error });
+    return handleDbError(res, error, 'update destination');
   }
   res.json({ status: true, message: 'Destination updated', data });
 });
@@ -282,8 +277,7 @@ router.delete('/destinations/:id', async (req, res) => {
   const id = BigInt(req.params.id);
   const { data, error } = await tryCatch(deleteDestinationData(id));
   if (error) {
-    logger.error(`Error in deleting the destination data `, error);
-    return res.status(400).json({ status: false, message: 'Unable to delete destination', error });
+    return handleDbError(res, error, 'delete destination');
   }
   res.json({ status: true, message: 'Destination deleted', data });
 });

@@ -21,7 +21,7 @@ export interface sourceCreateParam {
   status?: 'active' | 'disabled';
 }
 
-export type sourceUpdateParam = Partial<Omit<sourceCreateParam, 'projectId' | 'token'>>;
+export type sourceUpdateParam = sourceCreateParam;
 
 export interface destinationCreateParam {
   projectId: bigint;
@@ -33,4 +33,4 @@ export interface destinationCreateParam {
   status?: 'active' | 'disabled';
 }
 
-export type destinationUpdateParam = Partial<Omit<destinationCreateParam, 'projectId' | 'secret'>>;
+export type destinationUpdateParam = destinationCreateParam;

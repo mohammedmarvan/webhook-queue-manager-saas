@@ -27,6 +27,7 @@ export default function ProjectPage() {
   const [openProjectModal, setOpenProjectModal] = useState(false);
   const [editingProject, setEditingProject] = useState<any | null>(null);
   const [loading, setLoading] = useState(false);
+  const [modalLoading, seModalLoading] = useState(false);
 
   const handleDelete = async () => {
     if (!deleteId) return;
@@ -50,7 +51,7 @@ export default function ProjectPage() {
 
   const handleCreateProject = async (projectData: Project) => {
     try {
-      setLoading(true);
+      seModalLoading(true);
       let data = {
         name: projectData.name,
         description: projectData.description,
@@ -70,7 +71,7 @@ export default function ProjectPage() {
       console.log(`Error in creating project`);
       AppToast.error(`Something went wrong in creating project`);
     } finally {
-      setLoading(false);
+      seModalLoading(false);
     }
   };
 
@@ -140,6 +141,7 @@ export default function ProjectPage() {
         open={openProjectModal}
         onClose={() => setOpenProjectModal(false)}
         onSave={(data) => handleCreateProject(data as Project)}
+        loading={modalLoading}
       />
     </div>
   );

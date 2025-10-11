@@ -25,6 +25,7 @@ export interface Destination {
   secret?: string;
   retryPolicy?: any;
   timeoutMs?: number;
+  projectName?: string;
 }
 
 export interface Event {

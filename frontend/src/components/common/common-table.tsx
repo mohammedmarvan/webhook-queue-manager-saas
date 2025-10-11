@@ -17,6 +17,7 @@ import { SearchX } from 'lucide-react';
 export interface Column<T> {
   key: keyof T;
   label: string;
+  render?: (row: T) => React.ReactNode;
 }
 
 interface CommonTableProps<T> {
@@ -136,7 +137,9 @@ export function CommonTable<T extends { id?: string | number }>({
               <TableRow key={row.id}>
                 {columns.map((col) => (
                   <TableCell key={String(col.key)}>
-                    {row[col.key] as React.ReactNode}
+                    {col.render
+                      ? col.render(row)
+                      : (row[col.key] as React.ReactNode)}
                   </TableCell>
                 ))}
                 {renderActions && <TableCell>{renderActions(row)}</TableCell>}

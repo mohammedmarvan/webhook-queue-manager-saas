@@ -37,8 +37,14 @@ export const getSources = async (params: tableSearchParam) => {
     }),
   ]);
 
+  // Map project.name into projectName
+  const mapped = sources.map((s) => ({
+    ...s,
+    projectName: s.project?.name ?? '',
+  }));
+
   return {
-    data: sources,
+    data: mapped,
     total,
   };
 };

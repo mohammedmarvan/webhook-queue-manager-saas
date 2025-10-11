@@ -154,6 +154,9 @@ export default function ProjectEdit() {
   const [editingDestination, setEditingDestination] = useState<any | null>(
     null
   );
+  const [projectModalLoading, setProjectModalLoading] = useState(false);
+  const [sourceModalLoading, setSourceModalLoading] = useState(false);
+  const [destinationModalLoading, setDestinationModalLoading] = useState(false);
 
   const onNodesChange = useCallback(
     (changes: NodeChange[]) =>
@@ -201,7 +204,7 @@ export default function ProjectEdit() {
 
   const handleSourceSubmit = async (formData: SourceDataEdit) => {
     try {
-      setLoading(true);
+      setSourceModalLoading(true);
 
       if (formData.id) {
         // Update existing source
@@ -284,13 +287,13 @@ export default function ProjectEdit() {
     } catch (e) {
       AppToast.error('Error in updating source');
     } finally {
-      setLoading(false);
+      setSourceModalLoading(false);
     }
   };
 
   const handleUpdateProject = async (projectData: Project) => {
     try {
-      setLoading(true);
+      setProjectModalLoading(true);
       const res = await updateProject({
         id: projectData.id,
         name: projectData.name,
@@ -322,13 +325,13 @@ export default function ProjectEdit() {
     } catch (err) {
       AppToast.error('Error in updating project');
     } finally {
-      setLoading(false);
+      setProjectModalLoading(false);
     }
   };
 
   const handleUpdateDestination = async (destinationData: Destination) => {
     try {
-      setLoading(true);
+      setDestinationModalLoading(true);
 
       if (destinationData.id) {
         // Update existing destination
@@ -415,7 +418,7 @@ export default function ProjectEdit() {
     } catch (e) {
       AppToast.error('Error in updating destination');
     } finally {
-      setLoading(false);
+      setDestinationModalLoading(false);
     }
   };
 
@@ -504,6 +507,7 @@ export default function ProjectEdit() {
         initialData={editingSource}
         onSave={(data) => handleSourceSubmit(data as SourceDataEdit)}
         disableProjectId={true}
+        loading={sourceModalLoading}
       />
 
       <ProjectModal
@@ -511,6 +515,7 @@ export default function ProjectEdit() {
         onClose={() => setOpenProjectModal(false)}
         initialData={editingProject}
         onSave={(data) => handleUpdateProject(data as Project)}
+        loading={projectModalLoading}
       />
 
       <DestinationModal
@@ -519,6 +524,7 @@ export default function ProjectEdit() {
         initialData={editingDestination}
         onSave={(data) => handleUpdateDestination(data as Destination)}
         disableProjectId={true}
+        loading={destinationModalLoading}
       />
     </div>
   );

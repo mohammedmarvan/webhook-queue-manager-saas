@@ -3,19 +3,24 @@ import { Pencil, Trash2 } from 'lucide-react';
 import { CommonTable } from '@/components/common/common-table';
 import { Button } from '@/components/ui/button';
 import { useState } from 'react';
-import { updateSource, createSource, deleteSource } from '@/api/source';
+import {
+  deleteDestination,
+  updateDestination,
+  createDestination,
+} from '@/api/destination';
 import { AppToast } from '@/components/layout/AppToast';
 import { ConfirmDialog } from '@/components/common/confirm-dialog';
-import { type Source } from '@/types/models';
 import { type Column } from '@/components/common/common-table';
 import { Plus } from 'lucide-react';
-import { SourceModal } from '@/components/source/SourceModal';
 import { Badge } from '@/components/ui/badge';
+import { type Destination } from '@/types/models';
+import { updateSource } from '@/api/source';
+import { DestinationModal } from '@/components/destination/DestinationEditModal';
 
 export default function SourcePage() {
-  const columns: Column<Source>[] = [
+  const columns: Column<Destination>[] = [
     { key: 'name', label: 'Name' },
-    { key: 'urlPath', label: 'URL Path' },
+    { key: 'url', label: 'URL Path' },
     {
       key: 'status',
       label: 'Status',
@@ -29,6 +34,7 @@ export default function SourcePage() {
       ),
     },
     { key: 'projectName', label: 'Project Name' },
+    { key: 'timeoutMs', label: 'Timeout Ms' },
   ];
   const [refreshKey, setRefreshKey] = useState(0);
   const [open, setOpen] = useState(false);
@@ -36,20 +42,21 @@ export default function SourcePage() {
     null
   );
   const [deleteName, setDeleteName] = useState<string>('');
-  const [openSourceModal, setOpenSourceModal] = useState(false);
-  const [editingSource, setEditingSource] = useState<any | null>(null);
+  const [openDestModal, setOpenDestModal] = useState(false);
+  const [editingDest, setEditingDest] = useState<any | null>(null);
   const [loading, setLoading] = useState(false);
 
   const handleDelete = async () => {
     if (!deleteId) return;
     try {
       setLoading(true);
-      await deleteSource(deleteId);
-      AppToast.success(`Source "${deleteName}" deleted successfully`);
+      await deleteDestination(deleteId);
+      AppToast.success(`Destination "${deleteName}" deleted successfully`);
       setRefreshKey((k) => k + 1);
-    } catch (err) {
-      console.log('Error in deleting source ', err);
-      AppToast.error(`Error in deleting source.`);
+    } catch (err: any) {
+      console.log('Error in deleting destination ', err);
+      const serverMessage = err.response?.data?.message;
+      AppToast.error(serverMessage ?? `Error in deleting destination.`);
     } finally {
       setLoading(false);
       setOpen(false);
@@ -57,62 +64,66 @@ export default function SourcePage() {
     }
   };
 
-  const handleEditSourceClick = async (sourData: Source) => {
-    setEditingSource(sourData);
-    setOpenSourceModal(true);
+  const handleEditDestClick = async (destData: Destination) => {
+    setEditingDest(destData);
+    setOpenDestModal(true);
   };
 
-  const handleAddSource = async () => {
-    setEditingSource({});
-    setOpenSourceModal(true);
+  const handleAddDest = async () => {
+    setEditingDest({});
+    setOpenDestModal(true);
   };
 
-  const handleCreateSource = async (sourceData: Source) => {
+  const handleCreateDest = async (destData: Destination) => {
     try {
       setLoading(true);
-      if (sourceData.id) {
+      if (destData.id) {
         let data = {
-          name: sourceData.name,
-          projectId: sourceData.projectId,
-          token: sourceData.token,
-          urlPath: sourceData.urlPath,
-          status: sourceData.status,
-          id: sourceData.id,
+          name: destData.name,
+          projectId: destData.projectId,
+          url: destData.url,
+          status: destData.status,
+          id: destData.id,
+          secret: destData.secret,
+          retryPolicy: destData.retryPolicy,
+          timeoutMs: destData.timeoutMs,
         };
-        const res = await updateSource(data);
+        const res = await updateDestination(data);
         if (res?.status) {
-          AppToast.success(`Source updated successfully`);
+          AppToast.success(`Destination updated successfully`);
           setRefreshKey((k) => k + 1);
         } else {
           AppToast.error(
-            res?.message ?? 'Something went wrong while updating source'
+            res?.message ?? 'Something went wrong while updating destination'
           );
         }
       } else {
         let data = {
-          name: sourceData.name,
-          projectId: sourceData.projectId,
-          token: sourceData.token,
-          urlPath: sourceData.urlPath,
-          status: sourceData.status,
+          name: destData.name,
+          projectId: destData.projectId,
+          url: destData.url,
+          status: destData.status,
+          secret: destData.secret,
+          retryPolicy: destData.retryPolicy,
+          timeoutMs: destData.timeoutMs,
         };
-        const res = await createSource(data);
+        const res = await createDestination(data);
 
         if (res?.status) {
-          AppToast.success(`Source created successfully`);
+          AppToast.success(`Destination created successfully`);
           setRefreshKey((k) => k + 1);
         } else {
           AppToast.error(
-            res?.message ?? 'Something went wrong in creating source'
+            res?.message ?? 'Something went wrong in creating destination'
           );
         }
       }
-      setOpenSourceModal(false);
+      setOpenDestModal(false);
     } catch (err: any) {
-      console.log(`Error in creating source`);
+      console.log(`Error in creating destination`);
       const serverMessage = err.response?.data?.message;
       AppToast.error(
-        serverMessage ?? 'Something went wrong in creating source'
+        serverMessage ?? 'Something went wrong in creating destination'
       );
     } finally {
       setLoading(false);
@@ -127,17 +138,17 @@ export default function SourcePage() {
           { label: 'Sources' },
         ]}
       />
-      <CommonTable<Source>
-        endpoint="/sources"
+      <CommonTable<Destination>
+        endpoint="/destinations"
         columns={columns}
-        searchPlaceholder="Search source here..."
+        searchPlaceholder="Search destination here..."
         refreshKey={refreshKey}
         renderActions={(row) => (
           <div className="space-x-2">
             <Button
               variant="ghost"
               size="icon"
-              onClick={() => handleEditSourceClick(row)}
+              onClick={() => handleEditDestClick(row)}
             >
               <Pencil className="h-4 w-4" />
             </Button>
@@ -157,12 +168,12 @@ export default function SourcePage() {
         headerActions={
           <Button
             variant="outline"
-            aria-label="Add new source"
+            aria-label="Add new destination"
             size="lg"
-            onClick={handleAddSource}
+            onClick={handleAddDest}
           >
             <Plus className="h-4 w-4" />
-            <span>Add New Source</span>
+            <span>Add New Destination</span>
           </Button>
         }
       />
@@ -170,18 +181,18 @@ export default function SourcePage() {
       <ConfirmDialog
         open={open}
         onOpenChange={setOpen}
-        title="Delete Source"
-        description="Are you sure you want to delete this source? This action cannot be undone."
+        title="Delete Destination"
+        description="Are you sure you want to delete this destination? This action cannot be undone."
         confirmLabel="Delete"
         cancelLabel="Cancel"
         onConfirm={handleDelete}
       />
 
-      <SourceModal
-        open={openSourceModal}
-        initialData={editingSource}
-        onClose={() => setOpenSourceModal(false)}
-        onSave={(data) => handleCreateSource(data as Source)}
+      <DestinationModal
+        open={openDestModal}
+        initialData={editingDest}
+        onClose={() => setOpenDestModal(false)}
+        onSave={(data) => handleCreateDest(data as Destination)}
         loading={loading}
         disableProjectId={false}
       />

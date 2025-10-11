@@ -38,7 +38,7 @@ const items = [
   },
   {
     title: 'Destinations',
-    url: '#',
+    url: '/destination',
     icon: ArrowUpFromLine,
   },
   {
