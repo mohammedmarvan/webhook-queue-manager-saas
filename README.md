@@ -49,7 +49,7 @@ Webhooks are powerful, but they tightly couple two applications: if the destinat
 - Manage webhook **destinations**.
 - Add additional delivery details (headers, retry policies, etc.).
 
-![Destinations Screenshot](/screenshots/destination.png)
+![Destinations Screenshot](/screenshots/destinations.png)
 
 ---
 
