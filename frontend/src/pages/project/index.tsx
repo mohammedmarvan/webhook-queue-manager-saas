@@ -11,7 +11,7 @@ import { type Column } from '@/components/common/common-table';
 import { useNavigate } from 'react-router-dom';
 import { Plus } from 'lucide-react';
 import { ProjectModal } from '@/components/project/ProjectEditModal';
-import { PageLoader } from '@/components/layout/PageLoader';
+import { AxiosError } from 'axios';
 
 export default function ProjectPage() {
   const navigate = useNavigate();
@@ -25,8 +25,6 @@ export default function ProjectPage() {
   const [deleteId, setDeleteId] = useState<number | string | null>(null);
   const [deleteName, setDeleteName] = useState<string>('');
   const [openProjectModal, setOpenProjectModal] = useState(false);
-  const [editingProject, setEditingProject] = useState<any | null>(null);
-  const [loading, setLoading] = useState(false);
   const [modalLoading, seModalLoading] = useState(false);
 
   const handleDelete = async () => {
@@ -52,7 +50,7 @@ export default function ProjectPage() {
   const handleCreateProject = async (projectData: Project) => {
     try {
       seModalLoading(true);
-      let data = {
+      const data = {
         name: projectData.name,
         description: projectData.description,
         retentionDays: projectData.retentionDays,
@@ -68,16 +66,16 @@ export default function ProjectPage() {
       }
       setOpenProjectModal(false);
     } catch (err) {
-      console.log(`Error in creating project`);
-      AppToast.error(`Something went wrong in creating project`);
+      console.log(`Error in creating project`, err);
+      const axiosErr = err as AxiosError<{ message?: string }>;
+      const serverMessage = axiosErr.response?.data?.message;
+      AppToast.error(
+        serverMessage ?? `Something went wrong in creating project`
+      );
     } finally {
       seModalLoading(false);
     }
   };
-
-  if (loading) {
-    return <PageLoader />;
-  }
 
   return (
     <div className="flex flex-col gap-4 py-4 px-4 md:gap-6 md:py-6">

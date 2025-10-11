@@ -43,7 +43,7 @@ const items = [
   },
   {
     title: 'Events',
-    url: '#',
+    url: '/event',
     icon: Settings,
   },
   {

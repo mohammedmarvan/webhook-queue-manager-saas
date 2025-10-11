@@ -18,6 +18,8 @@ import {
   createDestinationData,
   updateDestinationData,
   deleteDestinationData,
+  getEventsData,
+  replayEventController,
 } from '../controllers/api.controller';
 import { handleDbError } from '../utils/db-error-handler';
 
@@ -283,3 +285,63 @@ router.delete('/destinations/:id', async (req, res) => {
 });
 
 export default router;
+
+// Event routes
+router.get('/events', async (req: Request, res: Response, next: NextFunction) => {
+  logger.info(`Fetching events information`);
+
+  const {
+    search = '',
+    page = 1,
+    limit = 100,
+  } = req.query as {
+    search?: string;
+    page?: number;
+    limit?: number;
+  };
+
+  const { data, error } = await tryCatch(getEventsData({ search, page, limit }));
+
+  if (error) {
+    logger.error(`Error in fetching the events data `, error);
+    res.json({
+      status: false,
+      message: `Unable to fetch the events data. ${error?.message}`,
+      error: error,
+    });
+    return;
+  }
+
+  res.json({ status: true, message: `Successfully fetched the events data`, data: data });
+});
+
+// replay event
+
+router.get('/events/replay/:id', async (req: Request, res: Response, next: NextFunction) => {
+  const { id } = req.params;
+
+  logger.info(`Input received for replaying event ${id}`);
+
+  if (!id) {
+    logger.error(`Invalid input received for event replay`);
+    res.status(400).json({
+      status: false,
+      message: `No Id found for event replay.`,
+    });
+    return;
+  }
+
+  const { data, error } = await tryCatch(replayEventController(id));
+
+  if (error) {
+    logger.error(`Error in replaying event `, error);
+    res.json({
+      status: false,
+      message: `Unable to replay event. ${error?.message}`,
+      error: error,
+    });
+    return;
+  }
+
+  res.json({ status: true, message: `Successfully queued event for replay`, data: data });
+});

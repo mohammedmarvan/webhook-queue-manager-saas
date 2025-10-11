@@ -11,6 +11,7 @@ import { type Column } from '@/components/common/common-table';
 import { Plus } from 'lucide-react';
 import { SourceModal } from '@/components/source/SourceModal';
 import { Badge } from '@/components/ui/badge';
+import { AxiosError } from 'axios';
 
 export default function SourcePage() {
   const columns: Column<Source>[] = [
@@ -71,7 +72,7 @@ export default function SourcePage() {
     try {
       setLoading(true);
       if (sourceData.id) {
-        let data = {
+        const data = {
           name: sourceData.name,
           projectId: sourceData.projectId,
           token: sourceData.token,
@@ -89,7 +90,7 @@ export default function SourcePage() {
           );
         }
       } else {
-        let data = {
+        const data = {
           name: sourceData.name,
           projectId: sourceData.projectId,
           token: sourceData.token,
@@ -108,9 +109,10 @@ export default function SourcePage() {
         }
       }
       setOpenSourceModal(false);
-    } catch (err: any) {
+    } catch (err) {
       console.log(`Error in creating source`);
-      const serverMessage = err.response?.data?.message;
+      const axiosErr = err as AxiosError<{ message?: string }>;
+      const serverMessage = axiosErr.response?.data?.message;
       AppToast.error(
         serverMessage ?? 'Something went wrong in creating source'
       );

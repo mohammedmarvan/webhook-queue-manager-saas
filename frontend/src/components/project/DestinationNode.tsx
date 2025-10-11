@@ -8,7 +8,6 @@ interface DestinationNodeProps {
     status?: string;
     projectId?: string;
     secret?: string;
-    retryPolicy?: any;
     timeoutMs?: number;
     onClick: (data: DestinationNodeProps['data']) => void;
   };

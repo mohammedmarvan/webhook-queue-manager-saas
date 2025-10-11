@@ -24,7 +24,7 @@ import { ProjectCombobox } from '../project/ProjectCombobox';
 interface DestinationModalProps {
   open: boolean;
   onClose: () => void;
-  initialData?: DestinationData; // if editing, pass existing data
+  initialData?: DestinationData | null; // if editing, pass existing data
   onSave: (data: DestinationData) => void;
   disableProjectId?: boolean;
   loading: boolean;
@@ -66,7 +66,7 @@ export const DestinationModal: React.FC<DestinationModalProps> = ({
     }
   }, [initialData]);
 
-  const handleChange = (field: keyof DestinationData, value: any) => {
+  const handleChange = (field: keyof DestinationData, value: unknown) => {
     setForm((prev) => ({ ...prev, [field]: value }));
   };
 

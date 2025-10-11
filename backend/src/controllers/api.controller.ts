@@ -30,6 +30,9 @@ import {
   type destinationUpdateParam,
 } from '../types/api-types';
 
+import { getEvents } from '../db/event-repo';
+import { replayEvent } from '../services/event-service';
+
 export const getDashboardInfo = async () => {
   return await getDashboardData();
 };
@@ -95,4 +98,12 @@ export const updateDestinationData = async (
 
 export const deleteDestinationData = async (destinationId: bigint) => {
   return await deleteDestination(destinationId);
+};
+
+export const getEventsData = async (params: tableSearchParam) => {
+  return await getEvents(params);
+};
+
+export const replayEventController = async (eventId: string) => {
+  return await replayEvent(eventId);
 };

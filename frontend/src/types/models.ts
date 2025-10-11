@@ -22,9 +22,9 @@ export interface Destination {
   name: string;
   url: string;
   status: 'active' | 'disabled';
-  secret?: string;
+  secret: string;
   retryPolicy?: any;
-  timeoutMs?: number;
+  timeoutMs: number;
   projectName?: string;
 }
 
@@ -34,6 +34,14 @@ export interface Event {
   sourceId: string;
   eventUid: string;
   status: 'received' | 'processing' | 'completed' | 'failed' | 'discarded';
+  sourceName: string;
+  projectName: string;
+  receivedAt: string;
+  completedAt: string;
+  retryCount: number;
+  payload?: any;
+  headers?: any;
+  deliveries?: Delivery[];
 }
 
 export interface Delivery {
@@ -43,4 +51,7 @@ export interface Delivery {
   attemptNo: number;
   responseStatus?: number;
   errorMessage?: string;
+  destinationName?: string;
+  durationMs?: number;
+  deliveredAt?: string;
 }

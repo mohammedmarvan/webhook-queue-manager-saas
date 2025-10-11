@@ -15,3 +15,11 @@ export async function addEvent(param: createEventParam) {
 
   return event;
 }
+
+export async function replayEvent(eventUid: string) {
+  logger.info(`✅ Event inserted for replay: ${eventUid}`);
+
+  await eventQueue.addJob({
+    eventUid,
+  });
+}

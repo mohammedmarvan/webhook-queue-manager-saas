@@ -14,8 +14,9 @@ import { type Column } from '@/components/common/common-table';
 import { Plus } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { type Destination } from '@/types/models';
-import { updateSource } from '@/api/source';
 import { DestinationModal } from '@/components/destination/DestinationEditModal';
+import type { DestinationData } from '@/types/destination';
+import { AxiosError } from 'axios';
 
 export default function SourcePage() {
   const columns: Column<Destination>[] = [
@@ -43,7 +44,7 @@ export default function SourcePage() {
   );
   const [deleteName, setDeleteName] = useState<string>('');
   const [openDestModal, setOpenDestModal] = useState(false);
-  const [editingDest, setEditingDest] = useState<any | null>(null);
+  const [editingDest, setEditingDest] = useState<DestinationData | null>(null);
   const [loading, setLoading] = useState(false);
 
   const handleDelete = async () => {
@@ -53,9 +54,10 @@ export default function SourcePage() {
       await deleteDestination(deleteId);
       AppToast.success(`Destination "${deleteName}" deleted successfully`);
       setRefreshKey((k) => k + 1);
-    } catch (err: any) {
+    } catch (err) {
       console.log('Error in deleting destination ', err);
-      const serverMessage = err.response?.data?.message;
+      const axiosErr = err as AxiosError<{ message?: string }>;
+      const serverMessage = axiosErr.response?.data?.message;
       AppToast.error(serverMessage ?? `Error in deleting destination.`);
     } finally {
       setLoading(false);
@@ -64,13 +66,13 @@ export default function SourcePage() {
     }
   };
 
-  const handleEditDestClick = async (destData: Destination) => {
+  const handleEditDestClick = async (destData: DestinationData) => {
     setEditingDest(destData);
     setOpenDestModal(true);
   };
 
   const handleAddDest = async () => {
-    setEditingDest({});
+    setEditingDest(null);
     setOpenDestModal(true);
   };
 
@@ -78,7 +80,7 @@ export default function SourcePage() {
     try {
       setLoading(true);
       if (destData.id) {
-        let data = {
+        const data = {
           name: destData.name,
           projectId: destData.projectId,
           url: destData.url,
@@ -98,7 +100,7 @@ export default function SourcePage() {
           );
         }
       } else {
-        let data = {
+        const data = {
           name: destData.name,
           projectId: destData.projectId,
           url: destData.url,
@@ -121,7 +123,8 @@ export default function SourcePage() {
       setOpenDestModal(false);
     } catch (err: any) {
       console.log(`Error in creating destination`);
-      const serverMessage = err.response?.data?.message;
+      const axiosErr = err as AxiosError<{ message?: string }>;
+      const serverMessage = axiosErr.response?.data?.message;
       AppToast.error(
         serverMessage ?? 'Something went wrong in creating destination'
       );
