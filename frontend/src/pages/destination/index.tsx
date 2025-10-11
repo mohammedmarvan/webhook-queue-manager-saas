@@ -138,7 +138,7 @@ export default function SourcePage() {
       <PageHeader
         breadcrumb={[
           { label: 'Home', href: '/dashboard' },
-          { label: 'Sources' },
+          { label: 'Destinations' },
         ]}
       />
       <CommonTable<Destination>
