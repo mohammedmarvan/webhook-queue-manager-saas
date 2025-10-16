@@ -122,7 +122,7 @@ export default function SourcePage() {
       }
       setOpenDestModal(false);
     } catch (err: any) {
-      console.log(`Error in creating destination`);
+      console.log(`Error in creating destination `,err);
       const axiosErr = err as AxiosError<{ message?: string }>;
       const serverMessage = axiosErr.response?.data?.message;
       AppToast.error(

@@ -7,6 +7,8 @@ import {
   RefreshCcw,
 } from 'lucide-react';
 import { SidebarHeaderTitle } from './SidebarHeaderTitle';
+import { useAuthUser } from '@/hooks/useAuthUser';
+import { NavUser } from './NavUser';
 
 import {
   Sidebar,
@@ -17,6 +19,7 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarFooter,
 } from '@/components/ui/sidebar';
 
 // Menu items.
@@ -54,6 +57,14 @@ const items = [
 ];
 
 export function AppSidebar() {
+  const user = useAuthUser();
+
+  function handleLogout() {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    window.location.href = '/login'; // redirect
+  }
+
   return (
     <Sidebar collapsible="icon">
       <SidebarHeaderTitle />
@@ -76,6 +87,9 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
+      <SidebarFooter>
+        {user && <NavUser user={user} onLogout={handleLogout} />}
+      </SidebarFooter>
     </Sidebar>
   );
 }

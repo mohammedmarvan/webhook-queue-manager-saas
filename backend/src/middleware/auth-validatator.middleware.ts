@@ -1,22 +1,22 @@
 import { Request, Response, NextFunction } from 'express';
 import logger from '../config/logger';
+import jwt from 'jsonwebtoken';
 
 export function authValidator(req: Request, res: Response, next: NextFunction) {
   try {
-    const apiKey = req.header('X-API-Key');
-    const expectedKey = process.env.X_API_KEY;
+    const authHeader = req.headers['authorization'];
+    if (!authHeader) return res.status(401).json({ message: 'Missing token' });
 
-    if (!expectedKey) {
-      logger.error('API_KEY not configured in environment');
-      return res.status(500).json({ error: 'Server misconfiguration' });
+    const token = authHeader.split(' ')[1];
+    if (!token) return res.status(401).json({ message: 'Invalid token' });
+
+    try {
+      const decoded = jwt.verify(token, process.env.JWT_SECRET!);
+      (req as any).user = decoded; // attach user info to request
+      next();
+    } catch (err) {
+      return res.status(403).json({ message: 'Invalid or expired token' });
     }
-
-    if (!apiKey || apiKey !== expectedKey) {
-      logger.warn('Unauthorized access attempt with invalid API key');
-      return res.status(401).json({ error: 'Not valid API key' });
-    }
-
-    next();
   } catch (err) {
     logger.error('Error in authValidator middleware', err);
     return res.status(500).json({ error: 'Internal server error' });

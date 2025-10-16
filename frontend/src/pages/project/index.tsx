@@ -43,7 +43,6 @@ export default function ProjectPage() {
   };
 
   const handleAddProject = async () => {
-    console.log('Hitting here');
     setOpenProjectModal(true);
   };
 

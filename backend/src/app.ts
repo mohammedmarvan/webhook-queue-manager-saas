@@ -2,6 +2,7 @@ import express from 'express';
 import { Request, Response, NextFunction } from 'express';
 import { requestLogger } from './middleware/api-validator.middleware';
 import api from './routes';
+import authRoutes from './routes/auth.routes';
 import { AppError } from './errors/app-error';
 import logger from './config/logger';
 import cors from 'cors';
@@ -12,6 +13,9 @@ app.use(cors({ origin: 'http://localhost:4000' }));
 app.use(express.json());
 
 app.use(requestLogger);
+
+app.use('/api/auth', authRoutes);
+
 app.use(api);
 
 app.get('/health', (_req, res) => {
