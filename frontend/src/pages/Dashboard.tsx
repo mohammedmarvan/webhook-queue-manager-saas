@@ -1,5 +1,3 @@
-import { useEffect, useState } from 'react';
-import { getDashbaordData } from '@/api/dashboard';
 import {
   Card,
   CardAction,
@@ -12,35 +10,18 @@ import { AppToast } from '@/components/layout/AppToast';
 import { Activity, Database, Send, Package } from 'lucide-react';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { HourlyChart } from '@/components/dashboard/HourlyChart';
-import { type DashboardData } from '@/types/dashboard';
+import { useDashboardQuery } from '@/hooks/useDashboardQuery';
 
 export default function Dashboard() {
-  const [data, setData] = useState<DashboardData | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { data, isLoading, isError, error } = useDashboardQuery();
 
-  useEffect(() => {
-    async function fetchData() {
-      try {
-        setLoading(true);
-        const res = await getDashbaordData();
-        if (res.status) {
-          setData(res.data);
-          return;
-        } else {
-          AppToast.error(res.message || 'Something went wrong');
-        }
-      } catch (err) {
-        console.log('Error in fetching dashboard data ', err);
-        AppToast.error('Failed to fetch dashboard data');
-      } finally {
-        setLoading(false);
-      }
-    }
-    fetchData();
-  }, []);
-
-  if (loading) {
+  if (isLoading) {
     return <PageLoader />;
+  }
+
+  if (isError) {
+    AppToast.error(`Failed to load dashboard ${error}`);
+    return null;
   }
 
   return (
@@ -64,7 +45,7 @@ export default function Dashboard() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {data?.counts.eventsLast24h}
+              {data?.data.counts.eventsLast24h}
             </div>
           </CardContent>
         </Card>
@@ -78,7 +59,7 @@ export default function Dashboard() {
             </CardAction>
           </CardHeader>
           <CardContent className="text-2xl font-bold">
-            {data?.counts.sourcesCount}
+            {data?.data.counts.sourcesCount}
           </CardContent>
         </Card>
         <Card className="@container/card">
@@ -91,7 +72,7 @@ export default function Dashboard() {
             </CardAction>
           </CardHeader>
           <CardContent className="text-2xl font-bold">
-            {data?.counts.destinationsCount}
+            {data?.data.counts.destinationsCount}
           </CardContent>
         </Card>
         <Card className="@container/card">
@@ -104,14 +85,14 @@ export default function Dashboard() {
             </CardAction>
           </CardHeader>
           <CardContent className="text-2xl font-bold">
-            {data?.counts.deliveriesLast24h}
+            {data?.data.counts.deliveriesLast24h}
           </CardContent>
         </Card>
       </div>
 
       {/* Row 2: Graph */}
       <div className="px-4 lg:px-6">
-        {data?.hourly && <HourlyChart data={data.hourly} />}
+        {data?.data.hourly && <HourlyChart data={data.data.hourly} />}
       </div>
     </div>
   );

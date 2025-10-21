@@ -3,29 +3,20 @@ import { AppSidebar } from '@/components/layout/Sidebar';
 import { AppHeader } from './AppHeader';
 import { AppFooter } from './AppFooter';
 import { Toaster } from '@/components/ui/sonner';
-import { useState, useEffect } from 'react';
+import { Outlet } from 'react-router-dom';
+import { useSidebarState } from '@/hooks/useSidebarState';
 
-export default function Layout({ children }: { children: React.ReactNode }) {
-  const [open, setOpen] = useState(true);
-
-  useEffect(() => {
-    const saved = localStorage.getItem('sidebar-open');
-    if (saved !== null) setOpen(saved === 'true');
-  }, []);
-
-  const sidebarOpenHandler = (state: boolean) => {
-    localStorage.setItem('sidebar-open', String(state));
-    setOpen(state);
-  };
+export default function Layout() {
+  const { open, setOpen } = useSidebarState();
 
   return (
-    <SidebarProvider open={open} onOpenChange={sidebarOpenHandler}>
+    <SidebarProvider open={open} onOpenChange={setOpen}>
       <AppSidebar />
       <SidebarInset>
         <AppHeader />
 
         <main className="flex-1 p-4">
-          {children}
+          <Outlet />
           <Toaster
             position="top-right"
             closeButton

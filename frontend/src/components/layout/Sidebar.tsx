@@ -9,6 +9,7 @@ import {
 import { SidebarHeaderTitle } from './SidebarHeaderTitle';
 import { useAuthUser } from '@/hooks/useAuthUser';
 import { NavUser } from './NavUser';
+import { memo } from 'react';
 
 import {
   Sidebar,
@@ -56,7 +57,7 @@ const items = [
   },
 ];
 
-export function AppSidebar() {
+export const AppSidebar = memo(() => {
   const user = useAuthUser();
 
   function handleLogout() {
@@ -92,4 +93,4 @@ export function AppSidebar() {
       </SidebarFooter>
     </Sidebar>
   );
-}
+});

@@ -110,7 +110,7 @@ export default function SourcePage() {
       }
       setOpenSourceModal(false);
     } catch (err) {
-      console.log(`Error in creating source `,err);
+      console.log(`Error in creating source `, err);
       const axiosErr = err as AxiosError<{ message?: string }>;
       const serverMessage = axiosErr.response?.data?.message;
       AppToast.error(
