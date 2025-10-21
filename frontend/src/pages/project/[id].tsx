@@ -32,7 +32,9 @@ import { DestinationModal } from '@/components/destination/DestinationEditModal'
 import { type SourceDataEdit } from '@/types/source';
 import { type ProjectData } from '@/types/project';
 import { type Project, type Destination } from '@/types/models';
+import { AxiosError } from 'axios';
 
+// Memoized node types to prevent recreation
 const nodeTypes = {
   sourceNode: SourceNode,
   projectNode: ProjectNode,
@@ -40,11 +42,34 @@ const nodeTypes = {
   addButtonNode: AddButtonNode,
 };
 
-// Utility functions
+// Types for better type safety
+interface SourceWithHandlers {
+  id: string;
+  name: string;
+  status: 'active' | 'disabled';
+  urlPath: string;
+  token?: string;
+  projectId: string;
+  onClick: (src: SourceWithHandlers) => void;
+}
+
+interface DestinationWithHandlers {
+  id: string;
+  name: string;
+  status: 'active' | 'disabled';
+  url: string;
+  secret: string;
+  retryPolicy?: any;
+  timeoutMs: number;
+  projectId: string;
+  onClick: (dest: DestinationWithHandlers) => void;
+}
+
+// Memoized utility functions
 const createSourceNodes = (
-  sources: any[],
+  sources: SourceWithHandlers[],
   projectId: string,
-  onSourceClick: (src: any) => void,
+  onSourceClick: (src: SourceWithHandlers) => void,
   onAddSource: (projectId: string) => void
 ): Node[] => {
   const sourceNodes = sources.map((src, i) => ({
@@ -72,9 +97,9 @@ const createSourceNodes = (
 };
 
 const createDestinationNodes = (
-  dests: any[],
+  dests: DestinationWithHandlers[],
   projectId: string,
-  onDestClick: (dest: any) => void,
+  onDestClick: (dest: DestinationWithHandlers) => void,
   onAddDest: (projectId: string) => void
 ): Node[] => {
   const destNodes = dests.map((dest, i) => ({
@@ -102,7 +127,7 @@ const createDestinationNodes = (
 };
 
 const createProjectNode = (
-  project: any,
+  project: Project,
   onProjectClick: (projectData: ProjectData) => void
 ): Node => ({
   id: `project-${project.id}`,
@@ -119,7 +144,10 @@ const createProjectNode = (
   },
 });
 
-const createSourceEdges = (sources: any[], projectId: string): Edge[] =>
+const createSourceEdges = (
+  sources: SourceWithHandlers[],
+  projectId: string
+): Edge[] =>
   sources.map((src) => ({
     id: `e-source-${src.id}`,
     source: `source-${src.id}`,
@@ -130,7 +158,10 @@ const createSourceEdges = (sources: any[], projectId: string): Edge[] =>
     markerEnd: { type: 'arrowclosed', color: '#0ea5e9' },
   }));
 
-const createDestinationEdges = (dests: any[], projectId: string): Edge[] =>
+const createDestinationEdges = (
+  dests: DestinationWithHandlers[],
+  projectId: string
+): Edge[] =>
   dests.map((dest) => ({
     id: `e-dest-${dest.id}`,
     source: `project-${projectId}`,
@@ -143,20 +174,26 @@ const createDestinationEdges = (dests: any[], projectId: string): Edge[] =>
 
 export default function ProjectEdit() {
   const { id } = useParams<{ id: string }>();
+
+  // Consolidated state management
   const [loading, setLoading] = useState(true);
   const [nodes, setNodes] = useState<Node[]>([]);
   const [edges, setEdges] = useState<Edge[]>([]);
-  const [openSourceModal, setOpenSourceModal] = useState(false);
-  const [editingSource, setEditingSource] = useState<any | null>(null);
-  const [openProjectModal, setOpenProjectModal] = useState(false);
-  const [editingProject, setEditingProject] = useState<any | null>(null);
-  const [openDestModal, setOpenDestModal] = useState(false);
-  const [editingDestination, setEditingDestination] = useState<any | null>(
-    null
-  );
-  const [projectModalLoading, setProjectModalLoading] = useState(false);
-  const [sourceModalLoading, setSourceModalLoading] = useState(false);
-  const [destinationModalLoading, setDestinationModalLoading] = useState(false);
+
+  const [modals, setModals] = useState({
+    source: { open: false, editingData: null as SourceWithHandlers | null },
+    project: { open: false, editingData: null as Project | null },
+    destination: {
+      open: false,
+      editingData: null as DestinationWithHandlers | null,
+    },
+  });
+
+  const [loadingStates, setLoadingStates] = useState({
+    source: false,
+    project: false,
+    destination: false,
+  });
 
   const onNodesChange = useCallback(
     (changes: NodeChange[]) =>
@@ -176,102 +213,149 @@ export default function ProjectEdit() {
     []
   );
 
-  // Event handlers
-  const handleSourceClick = (src: any) => {
-    setEditingSource(src);
-    setOpenSourceModal(true);
-  };
+  // Optimized event handlers with useCallback
+  const handleSourceClick = useCallback((src: SourceWithHandlers) => {
+    setModals((prev) => ({
+      ...prev,
+      source: { open: true, editingData: src },
+    }));
+  }, []);
 
-  const handleAddSource = (projectId: string) => {
-    setEditingSource({ projectId });
-    setOpenSourceModal(true);
-  };
+  const handleAddSource = useCallback((projectId: string) => {
+    setModals((prev) => ({
+      ...prev,
+      source: { open: true, editingData: { projectId } as SourceWithHandlers },
+    }));
+  }, []);
 
-  const handleProjectEditClick = (projectData: ProjectData) => {
-    setEditingProject(projectData);
-    setOpenProjectModal(true);
-  };
+  const handleProjectEditClick = useCallback((projectData: ProjectData) => {
+    setModals((prev) => ({
+      ...prev,
+      project: { open: true, editingData: projectData as Project },
+    }));
+  }, []);
 
-  const handleDestClick = (dest: any) => {
-    setEditingDestination(dest);
-    setOpenDestModal(true);
-  };
+  const handleDestClick = useCallback((dest: DestinationWithHandlers) => {
+    setModals((prev) => ({
+      ...prev,
+      destination: { open: true, editingData: dest },
+    }));
+  }, []);
 
-  const handleAddDestClick = (projectId: string) => {
-    setEditingDestination({ projectId });
-    setOpenDestModal(true);
-  };
+  const handleAddDestClick = useCallback((projectId: string) => {
+    setModals((prev) => ({
+      ...prev,
+      destination: {
+        open: true,
+        editingData: { projectId } as DestinationWithHandlers,
+      },
+    }));
+  }, []);
 
-  const handleSourceSubmit = async (formData: SourceDataEdit) => {
-    try {
-      setSourceModalLoading(true);
+  // Helper function to update nodes efficiently
+  const updateNodeData = useCallback((nodeId: string, newData: any) => {
+    setNodes((prev) =>
+      prev.map((node) =>
+        node.id === nodeId
+          ? { ...node, data: { ...node.data, ...newData } }
+          : node
+      )
+    );
+  }, []);
 
-      if (formData.id) {
-        // Update existing source
-        const updateData = {
-          id: formData.id,
-          projectId: formData.projectId,
-          name: formData.name,
-          status: formData.status,
-          urlPath: formData.urlPath,
-          token: formData.token,
-        };
+  // Helper function to add new nodes and edges
+  const addNewNodeAndEdge = useCallback(
+    (
+      newNode: Node,
+      newEdge: Edge,
+      nodeType: 'sourceNode' | 'destinationNode',
+      addButtonId: string
+    ) => {
+      setNodes((prev) => {
+        const otherNodes = prev.filter(
+          (n) => n.type !== nodeType && n.id !== addButtonId
+        );
+        const currentNodes = prev
+          .filter((n) => n.type === nodeType)
+          .map((n) => n.data);
 
-        const res = await updateSource(updateData);
-        if (res?.status) {
-          AppToast.success('Updated source successfully');
-          setNodes((prev) =>
-            prev.map((node) =>
-              node.id === `source-${formData.id}`
-                ? {
-                    ...node,
-                    data: {
-                      ...node.data,
-                      ...formData,
-                    },
-                  }
-                : node
-            )
-          );
+        if (nodeType === 'sourceNode') {
+          return [
+            ...createSourceNodes(
+              [...currentNodes, newNode.data] as any,
+              newNode.data.projectId as string,
+              handleSourceClick,
+              handleAddSource
+            ),
+            ...otherNodes,
+          ];
+        } else {
+          return [
+            ...createDestinationNodes(
+              [...currentNodes, newNode.data] as any,
+              newNode.data.projectId as string,
+              handleDestClick,
+              handleAddDestClick
+            ),
+            ...otherNodes,
+          ];
         }
-      } else {
-        // Create new source
-        const createData = {
-          projectId: formData.projectId,
-          name: formData.name,
-          status: formData.status,
-          urlPath: formData.urlPath,
-          token: formData.token,
-        };
+      });
 
-        const res = await createSource(createData);
-        if (res?.status) {
-          AppToast.success('Created source successfully');
+      setEdges((prev) => [...prev, newEdge]);
+    },
+    [handleSourceClick, handleAddSource, handleDestClick, handleAddDestClick]
+  );
 
-          const newSource = res.data;
-          setNodes((prev) => {
-            const otherNodes = prev.filter(
-              (n) => n.type !== 'sourceNode' && n.id !== 'add-source'
+  const handleSourceSubmit = useCallback(
+    async (formData: SourceDataEdit) => {
+      try {
+        setLoadingStates((prev) => ({ ...prev, source: true }));
+
+        if (formData.id) {
+          // Update existing source
+          const updateData = {
+            id: formData.id,
+            projectId: formData.projectId,
+            name: formData.name,
+            status: formData.status,
+            urlPath: formData.urlPath,
+            token: formData.token,
+          };
+
+          const res = await updateSource(updateData);
+          if (res?.status) {
+            AppToast.success('Source updated successfully');
+            updateNodeData(`source-${formData.id}`, formData);
+          } else {
+            AppToast.error(
+              res?.message ?? 'Failed to update source. Please try again.'
             );
+          }
+        } else {
+          // Create new source
+          const createData = {
+            projectId: formData.projectId,
+            name: formData.name,
+            status: formData.status,
+            urlPath: formData.urlPath,
+            token: formData.token,
+          };
 
-            const currentSources = prev
-              .filter((n) => n.type === 'sourceNode')
-              .map((n) => n.data);
+          const res = await createSource(createData);
+          if (res?.status) {
+            AppToast.success('Source created successfully');
+            const newSource = res.data;
 
-            return [
-              ...createSourceNodes(
-                [...currentSources, newSource],
-                formData.projectId,
-                handleSourceClick,
-                handleAddSource
-              ),
-              ...otherNodes,
-            ];
-          });
+            const newNode: Node = {
+              id: `source-${newSource.id}`,
+              position: { x: 0, y: 0 }, // Position will be calculated in createSourceNodes
+              sourcePosition: Position.Right,
+              type: 'sourceNode',
+              data: { ...newSource, onClick: handleSourceClick },
+            };
 
-          setEdges((prev) => [
-            ...prev,
-            {
+            const newEdge: Edge = {
               id: `e-source-${newSource.id}`,
               source: `source-${newSource.id}`,
               target: `project-${formData.projectId}`,
@@ -279,130 +363,130 @@ export default function ProjectEdit() {
               animated: true,
               style: { stroke: '#0ea5e9', strokeWidth: 2 },
               markerEnd: { type: 'arrowclosed', color: '#0ea5e9' },
-            },
-          ]);
+            };
+
+            addNewNodeAndEdge(newNode, newEdge, 'sourceNode', 'add-source');
+          } else {
+            AppToast.error(
+              res?.message ?? 'Failed to create source. Please try again.'
+            );
+          }
         }
-      }
-      setOpenSourceModal(false);
-    } catch (e) {
-      AppToast.error('Error in updating source');
-    } finally {
-      setSourceModalLoading(false);
-    }
-  };
 
-  const handleUpdateProject = async (projectData: Project) => {
-    try {
-      setProjectModalLoading(true);
-      const res = await updateProject({
-        id: projectData.id,
-        name: projectData.name,
-        description: projectData.description,
-        retentionDays: projectData.retentionDays,
-      });
-
-      if (res?.status) {
-        AppToast.success('Successfully updated the project');
-        setNodes((prev) =>
-          prev.map((node) =>
-            node.id === `project-${projectData.id}`
-              ? {
-                  ...node,
-                  data: {
-                    ...node.data,
-                    name: projectData.name,
-                    description: projectData.description,
-                    retentionDays: projectData.retentionDays,
-                  },
-                }
-              : node
-          )
+        setModals((prev) => ({
+          ...prev,
+          source: { open: false, editingData: null },
+        }));
+      } catch (err) {
+        console.error('Error saving source:', err);
+        const axiosErr = err as AxiosError<{ message?: string }>;
+        const serverMessage = axiosErr.response?.data?.message;
+        AppToast.error(
+          serverMessage ?? 'Failed to save source. Please try again.'
         );
-      } else {
-        AppToast.error('Something went wrong while updating the project');
+      } finally {
+        setLoadingStates((prev) => ({ ...prev, source: false }));
       }
-      setOpenProjectModal(false);
-    } catch (err) {
-      AppToast.error('Error in updating project');
-    } finally {
-      setProjectModalLoading(false);
-    }
-  };
+    },
+    [updateNodeData, addNewNodeAndEdge, handleSourceClick]
+  );
 
-  const handleUpdateDestination = async (destinationData: Destination) => {
-    try {
-      setDestinationModalLoading(true);
+  const handleUpdateProject = useCallback(
+    async (projectData: Project) => {
+      try {
+        setLoadingStates((prev) => ({ ...prev, project: true }));
 
-      if (destinationData.id) {
-        // Update existing destination
-        const updateData = {
-          id: destinationData.id,
-          projectId: destinationData.projectId,
-          name: destinationData.name,
-          status: destinationData.status,
-          url: destinationData.url,
-          secret: destinationData.secret,
-          retryPolicy: destinationData.retryPolicy,
-          timeoutMs: destinationData.timeoutMs,
-        };
+        const res = await updateProject({
+          id: projectData.id,
+          name: projectData.name,
+          description: projectData.description,
+          retentionDays: projectData.retentionDays,
+        });
 
-        const res = await updateDestination(updateData);
         if (res?.status) {
-          AppToast.success('Updated destination successfully');
-          setNodes((prev) =>
-            prev.map((node) =>
-              node.id === `dest-${destinationData.id}`
-                ? {
-                    ...node,
-                    data: {
-                      ...node.data,
-                      ...destinationData,
-                    },
-                  }
-                : node
-            )
+          AppToast.success('Project updated successfully');
+          updateNodeData(`project-${projectData.id}`, {
+            name: projectData.name,
+            description: projectData.description,
+            retentionDays: projectData.retentionDays,
+          });
+        } else {
+          AppToast.error(
+            res?.message ?? 'Failed to update project. Please try again.'
           );
         }
-      } else {
-        // Create new destination
-        const createData = {
-          projectId: destinationData.projectId,
-          name: destinationData.name,
-          status: destinationData.status,
-          url: destinationData.url,
-          secret: destinationData.secret,
-          retryPolicy: destinationData.retryPolicy,
-          timeoutMs: destinationData.timeoutMs,
-        };
 
-        const res = await createDestination(createData);
-        if (res?.status) {
-          AppToast.success('Created destination successfully');
+        setModals((prev) => ({
+          ...prev,
+          project: { open: false, editingData: null },
+        }));
+      } catch (err) {
+        console.error('Error updating project:', err);
+        const axiosErr = err as AxiosError<{ message?: string }>;
+        const serverMessage = axiosErr.response?.data?.message;
+        AppToast.error(
+          serverMessage ?? 'Failed to update project. Please try again.'
+        );
+      } finally {
+        setLoadingStates((prev) => ({ ...prev, project: false }));
+      }
+    },
+    [updateNodeData]
+  );
 
-          const newDest = res.data;
-          setNodes((prev) => {
-            const otherNodes = prev.filter(
-              (n) => n.type !== 'destinationNode' && n.id !== 'add-dest'
+  const handleUpdateDestination = useCallback(
+    async (destinationData: Destination) => {
+      try {
+        setLoadingStates((prev) => ({ ...prev, destination: true }));
+
+        if (destinationData.id) {
+          // Update existing destination
+          const updateData = {
+            id: destinationData.id,
+            projectId: destinationData.projectId,
+            name: destinationData.name,
+            status: destinationData.status,
+            url: destinationData.url,
+            secret: destinationData.secret,
+            retryPolicy: destinationData.retryPolicy,
+            timeoutMs: destinationData.timeoutMs,
+          };
+
+          const res = await updateDestination(updateData);
+          if (res?.status) {
+            AppToast.success('Destination updated successfully');
+            updateNodeData(`dest-${destinationData.id}`, destinationData);
+          } else {
+            AppToast.error(
+              res?.message ?? 'Failed to update destination. Please try again.'
             );
+          }
+        } else {
+          // Create new destination
+          const createData = {
+            projectId: destinationData.projectId,
+            name: destinationData.name,
+            status: destinationData.status,
+            url: destinationData.url,
+            secret: destinationData.secret,
+            retryPolicy: destinationData.retryPolicy,
+            timeoutMs: destinationData.timeoutMs,
+          };
 
-            const currentDests = prev
-              .filter((n) => n.type === 'destinationNode')
-              .map((n) => n.data);
+          const res = await createDestination(createData);
+          if (res?.status) {
+            AppToast.success('Destination created successfully');
+            const newDest = res.data;
 
-            return [
-              ...createDestinationNodes(
-                [...currentDests, newDest],
-                destinationData.projectId,
-                handleDestClick,
-                handleAddDestClick
-              ),
-              ...otherNodes,
-            ];
-          });
+            const newNode: Node = {
+              id: `dest-${newDest.id}`,
+              position: { x: 800, y: 0 }, // Position will be calculated in createDestinationNodes
+              targetPosition: Position.Left,
+              type: 'destinationNode',
+              data: { ...newDest, onClick: handleDestClick },
+            };
 
-          setEdges((prev) => [
-            ...prev,
-            {
+            const newEdge: Edge = {
               id: `e-dest-${newDest.id}`,
               source: `project-${destinationData.projectId}`,
               target: `dest-${newDest.id}`,
@@ -410,17 +494,33 @@ export default function ProjectEdit() {
               animated: true,
               style: { stroke: '#0ea5e9', strokeWidth: 2 },
               markerEnd: { type: 'arrowclosed', color: '#0ea5e9' },
-            },
-          ]);
+            };
+
+            addNewNodeAndEdge(newNode, newEdge, 'destinationNode', 'add-dest');
+          } else {
+            AppToast.error(
+              res?.message ?? 'Failed to create destination. Please try again.'
+            );
+          }
         }
+
+        setModals((prev) => ({
+          ...prev,
+          destination: { open: false, editingData: null },
+        }));
+      } catch (err) {
+        console.error('Error saving destination:', err);
+        const axiosErr = err as AxiosError<{ message?: string }>;
+        const serverMessage = axiosErr.response?.data?.message;
+        AppToast.error(
+          serverMessage ?? 'Failed to save destination. Please try again.'
+        );
+      } finally {
+        setLoadingStates((prev) => ({ ...prev, destination: false }));
       }
-      setOpenDestModal(false);
-    } catch (e) {
-      AppToast.error('Error in updating destination');
-    } finally {
-      setDestinationModalLoading(false);
-    }
-  };
+    },
+    [updateNodeData, addNewNodeAndEdge, handleDestClick]
+  );
 
   useEffect(() => {
     const fetchData = async () => {
@@ -461,17 +561,29 @@ export default function ProjectEdit() {
           setNodes([...sourceNodes, projectNode, ...destNodes]);
           setEdges([...sourceEdges, ...destEdges]);
         } else {
-          AppToast.error(res.message || 'Something went wrong');
+          AppToast.error(res.message || 'Failed to load project data');
         }
       } catch (err) {
-        AppToast.error('Failed to fetch project data');
+        console.error('Error fetching project data:', err);
+        const axiosErr = err as AxiosError<{ message?: string }>;
+        const serverMessage = axiosErr.response?.data?.message;
+        AppToast.error(
+          serverMessage ?? 'Failed to fetch project data. Please try again.'
+        );
       } finally {
         setLoading(false);
       }
     };
 
     fetchData();
-  }, [id]);
+  }, [
+    id,
+    handleSourceClick,
+    handleAddSource,
+    handleProjectEditClick,
+    handleDestClick,
+    handleAddDestClick,
+  ]);
 
   if (loading) {
     return <PageLoader />;
@@ -502,29 +614,53 @@ export default function ProjectEdit() {
       </div>
 
       <SourceModal
-        open={openSourceModal}
-        onClose={() => setOpenSourceModal(false)}
-        initialData={editingSource}
+        open={modals.source.open}
+        onClose={() =>
+          setModals((prev) => ({
+            ...prev,
+            source: { open: false, editingData: null },
+          }))
+        }
+        initialData={modals.source.editingData || undefined}
         onSave={(data) => handleSourceSubmit(data as SourceDataEdit)}
         disableProjectId={true}
-        loading={sourceModalLoading}
+        loading={loadingStates.source}
       />
 
       <ProjectModal
-        open={openProjectModal}
-        onClose={() => setOpenProjectModal(false)}
-        initialData={editingProject}
+        open={modals.project.open}
+        onClose={() =>
+          setModals((prev) => ({
+            ...prev,
+            project: { open: false, editingData: null },
+          }))
+        }
+        initialData={
+          modals.project.editingData
+            ? {
+                id: modals.project.editingData.id,
+                name: modals.project.editingData.name,
+                description: modals.project.editingData.description,
+                retentionDays: modals.project.editingData.retentionDays || 30,
+              }
+            : undefined
+        }
         onSave={(data) => handleUpdateProject(data as Project)}
-        loading={projectModalLoading}
+        loading={loadingStates.project}
       />
 
       <DestinationModal
-        open={openDestModal}
-        onClose={() => setOpenDestModal(false)}
-        initialData={editingDestination}
+        open={modals.destination.open}
+        onClose={() =>
+          setModals((prev) => ({
+            ...prev,
+            destination: { open: false, editingData: null },
+          }))
+        }
+        initialData={modals.destination.editingData || undefined}
         onSave={(data) => handleUpdateDestination(data as Destination)}
         disableProjectId={true}
-        loading={destinationModalLoading}
+        loading={loadingStates.destination}
       />
     </div>
   );

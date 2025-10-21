@@ -1,80 +1,112 @@
 import { PageHeader } from '@/components/layout/PageHeader';
-import { Pencil, Trash2 } from 'lucide-react';
+import { Pencil, Trash2, Plus } from 'lucide-react';
 import { CommonTable } from '@/components/common/common-table';
 import { Button } from '@/components/ui/button';
-import { useState } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { deleteProject, createProject } from '@/api/project';
 import { AppToast } from '@/components/layout/AppToast';
 import { ConfirmDialog } from '@/components/common/confirm-dialog';
 import { type Project } from '@/types/models';
 import { type Column } from '@/components/common/common-table';
 import { useNavigate } from 'react-router-dom';
-import { Plus } from 'lucide-react';
 import { ProjectModal } from '@/components/project/ProjectEditModal';
 import { AxiosError } from 'axios';
 
 export default function ProjectPage() {
   const navigate = useNavigate();
-  const columns: Column<Project>[] = [
-    { key: 'name', label: 'Name' },
-    { key: 'description', label: 'Description' },
-    { key: 'createdAt', label: 'Created At' },
-  ];
-  const [refreshKey, setRefreshKey] = useState(0);
-  const [open, setOpen] = useState(false);
-  const [deleteId, setDeleteId] = useState<number | string | null>(null);
-  const [deleteName, setDeleteName] = useState<string>('');
-  const [openProjectModal, setOpenProjectModal] = useState(false);
-  const [modalLoading, seModalLoading] = useState(false);
 
-  const handleDelete = async () => {
-    if (!deleteId) return;
+  // Memoize columns to prevent unnecessary re-renders
+  const columns: Column<Project>[] = useMemo(
+    () => [
+      { key: 'name', label: 'Name' },
+      { key: 'description', label: 'Description' },
+      { key: 'createdAt', label: 'Created At' },
+    ],
+    []
+  );
+
+  // Consolidated state management
+  const [refreshKey, setRefreshKey] = useState(0);
+  const [deleteDialog, setDeleteDialog] = useState<{
+    open: boolean;
+    id: number | string | null;
+    name: string;
+  }>({ open: false, id: null, name: '' });
+  const [projectModal, setProjectModal] = useState<{
+    open: boolean;
+    loading: boolean;
+  }>({ open: false, loading: false });
+
+  // Optimized event handlers with useCallback
+  const handleDelete = useCallback(async () => {
+    if (!deleteDialog.id) return;
+
     try {
-      await deleteProject(deleteId);
-      AppToast.success(`Project "${deleteName}" deleted successfully`);
+      await deleteProject(deleteDialog.id);
+      AppToast.success(`Project "${deleteDialog.name}" deleted successfully`);
       setRefreshKey((k) => k + 1);
     } catch (err) {
-      console.log('Error in deleting project ', err);
-      AppToast.error(`Error in deleting project.`);
+      console.error('Error deleting project:', err);
+      const axiosErr = err as AxiosError<{ message?: string }>;
+      const serverMessage = axiosErr.response?.data?.message;
+      AppToast.error(
+        serverMessage ?? 'Failed to delete project. Please try again.'
+      );
     } finally {
-      setOpen(false);
-      setDeleteId(null);
+      setDeleteDialog({ open: false, id: null, name: '' });
     }
-  };
+  }, [deleteDialog.id, deleteDialog.name]);
 
-  const handleAddProject = async () => {
-    setOpenProjectModal(true);
-  };
+  const handleAddProject = useCallback(() => {
+    setProjectModal((prev) => ({ ...prev, open: true }));
+  }, []);
 
-  const handleCreateProject = async (projectData: Project) => {
+  const handleCreateProject = useCallback(async (projectData: Project) => {
     try {
-      seModalLoading(true);
+      setProjectModal((prev) => ({ ...prev, loading: true }));
+
       const data = {
         name: projectData.name,
         description: projectData.description,
         retentionDays: projectData.retentionDays,
         userId: 2,
       };
+
       const res = await createProject(data);
 
       if (res?.status) {
-        AppToast.success(`Project created successfully`);
+        AppToast.success('Project created successfully');
         setRefreshKey((k) => k + 1);
+        setProjectModal({ open: false, loading: false });
       } else {
-        AppToast.error(`Something went wrong in creating project`);
+        AppToast.error('Failed to create project. Please try again.');
       }
-      setOpenProjectModal(false);
     } catch (err) {
-      console.log(`Error in creating project`, err);
+      console.error('Error creating project:', err);
       const axiosErr = err as AxiosError<{ message?: string }>;
       const serverMessage = axiosErr.response?.data?.message;
       AppToast.error(
-        serverMessage ?? `Something went wrong in creating project`
+        serverMessage ?? 'Failed to create project. Please try again.'
       );
     } finally {
-      seModalLoading(false);
+      setProjectModal((prev) => ({ ...prev, loading: false }));
     }
-  };
+  }, []);
+
+  const handleDeleteClick = useCallback((row: Project) => {
+    setDeleteDialog({
+      open: true,
+      id: row.id,
+      name: row.name,
+    });
+  }, []);
+
+  const handleEditClick = useCallback(
+    (row: Project) => {
+      navigate(`/project/${row.id}/edit`);
+    },
+    [navigate]
+  );
 
   return (
     <div className="flex flex-col gap-4 py-4 px-4 md:gap-6 md:py-6">
@@ -94,18 +126,16 @@ export default function ProjectPage() {
             <Button
               variant="ghost"
               size="icon"
-              onClick={() => navigate(`/project/${row.id}/edit`)}
+              onClick={() => handleEditClick(row)}
+              aria-label={`Edit project ${row.name}`}
             >
               <Pencil className="h-4 w-4" />
             </Button>
             <Button
               variant="ghost"
               size="icon"
-              onClick={() => {
-                setDeleteId(row.id);
-                setDeleteName(row.name);
-                setOpen(true);
-              }}
+              onClick={() => handleDeleteClick(row)}
+              aria-label={`Delete project ${row.name}`}
             >
               <Trash2 className="h-4 w-4 text-red-500" />
             </Button>
@@ -125,8 +155,8 @@ export default function ProjectPage() {
       />
 
       <ConfirmDialog
-        open={open}
-        onOpenChange={setOpen}
+        open={deleteDialog.open}
+        onOpenChange={(open) => setDeleteDialog((prev) => ({ ...prev, open }))}
         title="Delete Project"
         description="Are you sure you want to delete this project? This action cannot be undone."
         confirmLabel="Delete"
@@ -135,10 +165,10 @@ export default function ProjectPage() {
       />
 
       <ProjectModal
-        open={openProjectModal}
-        onClose={() => setOpenProjectModal(false)}
+        open={projectModal.open}
+        onClose={() => setProjectModal((prev) => ({ ...prev, open: false }))}
         onSave={(data) => handleCreateProject(data as Project)}
-        loading={modalLoading}
+        loading={projectModal.loading}
       />
     </div>
   );
