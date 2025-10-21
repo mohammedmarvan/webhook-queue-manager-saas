@@ -15,7 +15,7 @@ async function start() {
     logger.info(`Conneting to Redis`);
     await connectRedis();
 
-    app.listen(process.env.API_PORT, () => {
+    app.listen(Number(process.env.API_PORT), '0.0.0.0', () => {
       logger.info(`Server listening on http://localhost:${process.env.API_PORT}`);
     });
   } catch (err: any) {
