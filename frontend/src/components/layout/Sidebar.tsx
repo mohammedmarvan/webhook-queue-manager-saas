@@ -10,6 +10,7 @@ import { SidebarHeaderTitle } from './SidebarHeaderTitle';
 import { useAuthUser } from '@/hooks/useAuthUser';
 import { NavUser } from './NavUser';
 import { memo } from 'react';
+import { Link } from 'react-router-dom';
 
 import {
   Sidebar,
@@ -77,10 +78,10 @@ export const AppSidebar = memo(() => {
               {items.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild tooltip={item.title}>
-                    <a href={item.url}>
+                    <Link to={`${item.url}`} >
                       <item.icon />
                       <span>{item.title}</span>
-                    </a>
+                    </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}

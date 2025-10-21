@@ -19,24 +19,22 @@ function App() {
 
         {/* Protected routes */}
         <Route
-          path="/*"
+          path="/"
           element={
             <ProtectedRoute>
-              <Layout>
-                <Routes>
-                  <Route path="/" element={<Dashboard />} />
-                  <Route path="/dashboard" element={<Dashboard />} />
-                  <Route path="/project" element={<Projects />} />
-                  <Route path="/project/:id/edit" element={<ProjectEdit />} />
-                  <Route path="/source" element={<Sources />} />
-                  <Route path="/destination" element={<Destinations />} />
-                  <Route path="/event" element={<Events />} />
-                  <Route path="*" element={<Dashboard />} />
-                </Routes>
-              </Layout>
+              <Layout />
             </ProtectedRoute>
           }
-        />
+        >
+          <Route index element={<Dashboard />} />
+          <Route path="dashboard" element={<Dashboard />} />
+          <Route path="project" element={<Projects />} />
+          <Route path="project/:id/edit" element={<ProjectEdit />} />
+          <Route path="source" element={<Sources />} />
+          <Route path="destination" element={<Destinations />} />
+          <Route path="event" element={<Events />} />
+          <Route path="*" element={<Dashboard />} />
+        </Route>
       </Routes>
     </BrowserRouter>
   );
