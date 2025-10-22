@@ -89,6 +89,7 @@ This separation allows independent development and deployment of frontend and ba
    ```bash
    git clone https://github.com/mohammedmarvan/webhook-queue-manager.git
    cd webhook-queue-manager
+   npm install
    cd frontend && npm install
    cd ../backend && npm install
    cd ..
