@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState, useCallback, useMemo, useEffect } from 'react';
 import {
   Table,
   TableHead,
@@ -9,10 +9,10 @@ import {
 } from '@/components/ui/table';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import api from '@/api/client';
 import { PageLoader } from '../layout/PageLoader';
-import { AppToast } from '../layout/AppToast';
 import { SearchX } from 'lucide-react';
+import { usePaginatedQuery } from '@/hooks/usePaginatedQuery';
+import { AxiosError } from 'axios';
 
 export interface Column<T> {
   key: keyof T;
@@ -28,6 +28,14 @@ interface CommonTableProps<T> {
   pageSize?: number;
   refreshKey?: number;
   headerActions?: React.ReactNode;
+  enabled?: boolean;
+}
+
+interface ApiResponse<T> {
+  data: T[];
+  total: number;
+  page: number;
+  limit: number;
 }
 
 export function CommonTable<T extends { id?: string | number }>({
@@ -38,50 +46,99 @@ export function CommonTable<T extends { id?: string | number }>({
   pageSize = 10,
   refreshKey = 0,
   headerActions,
+  enabled = true,
 }: CommonTableProps<T>) {
-  const [data, setData] = useState<T[]>([]);
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
-  const [total, setTotal] = useState(0);
-  const [loading, setLoading] = useState(false);
   const [debouncedSearch, setDebouncedSearch] = useState('');
 
-  // Debounce effect
+  // Debounce search input
   useEffect(() => {
     const handler = setTimeout(() => {
       if (search.length >= 3 || search.length === 0) {
         setDebouncedSearch(search);
+        setPage(1); // Reset to first page when searching
       }
-    }, 400); // wait 400ms after typing stops
+    }, 400);
 
     return () => clearTimeout(handler);
   }, [search]);
 
-  // Fetch data from API
-  useEffect(() => {
-    const fetchData = async () => {
-      setLoading(true);
-      try {
-        const res = await api.get(endpoint, {
-          params: { search: debouncedSearch, page, limit: pageSize },
-        });
-        setData(res.data.data.data || []);
-        setTotal(res.data.data.total || 0);
-      } catch (err) {
-        const e = err as Error;
-        console.error('Error fetching data', err);
-        AppToast.error(e?.message ?? 'Something went wrong');
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchData();
-  }, [endpoint, debouncedSearch, page, pageSize, refreshKey]);
+  // Use React Query for data fetching
+  const {
+    data: queryData,
+    isLoading,
+    error,
+    isError,
+  } = usePaginatedQuery<ApiResponse<T>>({
+    endpoint,
+    page,
+    pageSize,
+    search: debouncedSearch,
+    refreshKey,
+    enabled: enabled && refreshKey >= 0, // Enable query when refreshKey is valid
+  });
 
-  const totalPages = Math.ceil(total / pageSize);
+  // Extract data and total from query response
+  const data = queryData?.data || [];
+  const total = queryData?.total || 0;
 
-  if (loading) {
+  // Optimized event handlers
+  const handleSearchChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      setSearch(e.target.value);
+    },
+    []
+  );
+
+  const handlePreviousPage = useCallback(() => {
+    setPage((prev) => Math.max(1, prev - 1));
+  }, []);
+
+  // Memoized calculations
+  const totalPages = useMemo(
+    () => Math.ceil(total / pageSize),
+    [total, pageSize]
+  );
+  const hasData = data.length > 0;
+  const showActions = !!renderActions;
+
+  const handleNextPage = useCallback(() => {
+    setPage((prev) => Math.min(totalPages, prev + 1));
+  }, [totalPages]);
+
+  // Show loading state
+  if (isLoading) {
     return <PageLoader />;
+  }
+
+  // Show error state
+  if (isError) {
+    const errorMessage =
+      error instanceof AxiosError
+        ? error.response?.data?.message || 'Failed to load data'
+        : 'An unexpected error occurred';
+
+    return (
+      <div className="space-y-4">
+        <div className="flex justify-between items-center">
+          <Input
+            placeholder={searchPlaceholder}
+            value={search}
+            onChange={handleSearchChange}
+            className="w-1/3"
+            disabled
+          />
+          <div className="flex space-x-2">{headerActions}</div>
+        </div>
+        <div className="h-40 flex items-center justify-center text-center text-muted-foreground">
+          <div className="flex flex-col items-center space-y-2">
+            <SearchX className="h-6 w-6 text-red-400" />
+            <span className="text-red-600">{errorMessage}</span>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -91,13 +148,9 @@ export function CommonTable<T extends { id?: string | number }>({
         <Input
           placeholder={searchPlaceholder}
           value={search}
-          onChange={(e) => {
-            setPage(1); // reset to first page when searching
-            setSearch(e.target.value);
-          }}
+          onChange={handleSearchChange}
           className="w-1/3"
         />
-
         <div className="flex space-x-2">{headerActions}</div>
       </div>
 
@@ -110,20 +163,16 @@ export function CommonTable<T extends { id?: string | number }>({
                 {col.label}
               </TableHead>
             ))}
-            {renderActions && (
+            {showActions && (
               <TableHead className="font-semibold">Actions</TableHead>
             )}
           </TableRow>
         </TableHeader>
         <TableBody>
-          {loading ? (
-            <TableRow>
-              <TableCell colSpan={columns.length + 1}>Loading...</TableCell>
-            </TableRow>
-          ) : data.length === 0 ? (
+          {!hasData ? (
             <TableRow>
               <TableCell
-                colSpan={columns.length + 1}
+                colSpan={columns.length + (showActions ? 1 : 0)}
                 className="h-40 text-center align-middle text-muted-foreground"
               >
                 <div className="flex flex-col items-center justify-center space-y-2">
@@ -133,7 +182,7 @@ export function CommonTable<T extends { id?: string | number }>({
               </TableCell>
             </TableRow>
           ) : (
-            data.map((row) => (
+            data.map((row: T) => (
               <TableRow key={row.id}>
                 {columns.map((col) => (
                   <TableCell key={String(col.key)}>
@@ -142,7 +191,7 @@ export function CommonTable<T extends { id?: string | number }>({
                       : (row[col.key] as React.ReactNode)}
                   </TableCell>
                 ))}
-                {renderActions && <TableCell>{renderActions(row)}</TableCell>}
+                {showActions && <TableCell>{renderActions!(row)}</TableCell>}
               </TableRow>
             ))
           )}
@@ -159,7 +208,7 @@ export function CommonTable<T extends { id?: string | number }>({
             variant="outline"
             size="sm"
             disabled={page === 1}
-            onClick={() => setPage((p) => p - 1)}
+            onClick={handlePreviousPage}
           >
             Prev
           </Button>
@@ -167,7 +216,7 @@ export function CommonTable<T extends { id?: string | number }>({
             variant="outline"
             size="sm"
             disabled={page === totalPages || totalPages === 0}
-            onClick={() => setPage((p) => p + 1)}
+            onClick={handleNextPage}
           >
             Next
           </Button>
