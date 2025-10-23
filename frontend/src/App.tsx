@@ -8,6 +8,7 @@ import Destinations from './pages/destination';
 import Events from './pages/event';
 import LoginPage from './pages/auth/Login';
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
+import { SessionExpiredModal } from '@/components/auth/SessionExpiredModal';
 // import Logs from "./pages/Logs";
 
 function App() {
@@ -36,6 +37,7 @@ function App() {
           <Route path="*" element={<Dashboard />} />
         </Route>
       </Routes>
+      <SessionExpiredModal />
     </BrowserRouter>
   );
 }

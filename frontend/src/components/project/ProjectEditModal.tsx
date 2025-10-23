@@ -43,9 +43,15 @@ export const ProjectModal: React.FC<ProjectModalProps> = ({
     }
   }, [initialData]);
 
-  const handleChange = (field: keyof ProjectData, value: string | number) => {
-    setForm((prev) => ({ ...prev, [field]: value }));
-  };
+  const handleChange =
+    (field: keyof ProjectData) =>
+    (
+      e:
+        | React.ChangeEvent<HTMLInputElement>
+        | React.ChangeEvent<HTMLTextAreaElement>
+    ) => {
+      setForm((prev) => ({ ...prev, [field]: e.target.value }));
+    };
 
   const handleSubmit = () => {
     onSave(form);
@@ -81,7 +87,7 @@ export const ProjectModal: React.FC<ProjectModalProps> = ({
               id="name"
               placeholder="Project Name"
               value={form.name}
-              onChange={(e) => handleChange('name', e.target.value)}
+              onChange={handleChange('name')}
             />
           </div>
 
@@ -93,7 +99,7 @@ export const ProjectModal: React.FC<ProjectModalProps> = ({
               id="description"
               placeholder="Optional description"
               value={form.description ?? ''}
-              onChange={(e) => handleChange('description', e.target.value)}
+              onChange={handleChange('description')}
               className="min-h-[100px]" // optional: control height
             />
           </div>
@@ -107,9 +113,7 @@ export const ProjectModal: React.FC<ProjectModalProps> = ({
               type="number"
               min={1}
               value={form.retentionDays}
-              onChange={(e) =>
-                handleChange('retentionDays', parseInt(e.target.value, 10))
-              }
+              onChange={handleChange('retentionDays')}
             />
           </div>
         </div>
