@@ -205,6 +205,7 @@ export function CommonTable<T extends { id?: string | number }>({
         </span>
         <div className="space-x-2">
           <Button
+            className="cursor-pointer"
             variant="outline"
             size="sm"
             disabled={page === 1}
@@ -213,6 +214,7 @@ export function CommonTable<T extends { id?: string | number }>({
             Prev
           </Button>
           <Button
+            className="cursor-pointer"
             variant="outline"
             size="sm"
             disabled={page === totalPages || totalPages === 0}

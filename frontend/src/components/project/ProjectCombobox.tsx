@@ -74,7 +74,7 @@ export function ProjectCombobox({
             role="combobox"
             aria-expanded={open}
             disabled={disabled}
-            className="w-full justify-between"
+            className="w-full justify-between cursor-pointer"
           >
             {selected ? selected.name : placeholder}
             <ChevronsUpDown className="ml-2 h-4 w-4 opacity-50" />

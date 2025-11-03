@@ -208,10 +208,10 @@ export const DestinationModal: React.FC<DestinationModalProps> = ({
         </div>
 
         <DialogFooter>
-          <Button variant="outline" onClick={onClose}>
+          <Button className="cursor-pointer" variant="outline" onClick={onClose}>
             Cancel
           </Button>
-          <Button onClick={handleSubmit}>
+          <Button className="cursor-pointer" onClick={handleSubmit}>
             {initialData ? 'Save Changes' : 'Add Destination'}
           </Button>
         </DialogFooter>

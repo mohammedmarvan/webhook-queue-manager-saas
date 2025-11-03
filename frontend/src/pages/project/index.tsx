@@ -124,6 +124,7 @@ export default function ProjectPage() {
         renderActions={(row) => (
           <div className="space-x-2">
             <Button
+              className="cursor-pointer"
               variant="ghost"
               size="icon"
               onClick={() => handleEditClick(row)}
@@ -132,6 +133,7 @@ export default function ProjectPage() {
               <Pencil className="h-4 w-4" />
             </Button>
             <Button
+              className="cursor-pointer"
               variant="ghost"
               size="icon"
               onClick={() => handleDeleteClick(row)}
@@ -143,6 +145,7 @@ export default function ProjectPage() {
         )}
         headerActions={
           <Button
+            className="cursor-pointer"
             variant="outline"
             aria-label="Add new project"
             size="lg"

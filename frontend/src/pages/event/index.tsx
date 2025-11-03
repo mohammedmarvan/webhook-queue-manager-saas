@@ -111,6 +111,7 @@ export default function EventPage() {
         renderActions={(row) => (
           <div className="space-x-2">
             <Button
+              className="cursor-pointer"
               variant="ghost"
               size="icon"
               onClick={() => handleViewDetails(row)}
@@ -119,6 +120,7 @@ export default function EventPage() {
               <Eye className="h-4 w-4" />
             </Button>
             <Button
+              className="cursor-pointer"
               variant="ghost"
               size="icon"
               onClick={() => handleReplayClick(row.eventUid as string)}

@@ -38,6 +38,7 @@ export function EventDetailsModal({ open, onClose, event, onReplay }: Props) {
             <div className="flex items-center gap-2 px-4">
               <Badge className="capitalize">{event.status}</Badge>
               <Button
+                className="cursor-pointer"
                 size="sm"
                 variant="outline"
                 onClick={() => onReplay(event.eventUid as string)}

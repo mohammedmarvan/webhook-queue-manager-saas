@@ -164,6 +164,7 @@ export default function DestinationPage() {
         renderActions={(row) => (
           <div className="space-x-2">
             <Button
+              className="cursor-pointer"
               variant="ghost"
               size="icon"
               onClick={() => handleEditDestClick(row)}
@@ -172,6 +173,7 @@ export default function DestinationPage() {
               <Pencil className="h-4 w-4" />
             </Button>
             <Button
+              className="cursor-pointer"
               variant="ghost"
               size="icon"
               onClick={() => {
@@ -189,6 +191,7 @@ export default function DestinationPage() {
         )}
         headerActions={
           <Button
+            className="cursor-pointer"
             variant="outline"
             aria-label="Add new destination"
             size="lg"

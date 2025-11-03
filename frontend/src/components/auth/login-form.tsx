@@ -96,7 +96,7 @@ export function LoginForm({
                 </Field>
                 {error && <p className="text-red-500 text-sm">{error}</p>}
                 <Field>
-                  <Button type="submit">Login</Button>
+                  <Button className="cursor-pointer" type="submit">Login</Button>
                 </Field>
                 {/* <FieldSeparator className="*:data-[slot=field-separator-content]:bg-card">
                   Or continue with

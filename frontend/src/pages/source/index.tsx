@@ -150,6 +150,7 @@ export default function SourcePage() {
         renderActions={(row) => (
           <div className="space-x-2">
             <Button
+              className="cursor-pointer"
               variant="ghost"
               size="icon"
               onClick={() => handleEditSourceClick(row)}
@@ -158,6 +159,7 @@ export default function SourcePage() {
               <Pencil className="h-4 w-4" />
             </Button>
             <Button
+              className="cursor-pointer"
               variant="ghost"
               size="icon"
               onClick={() => {
@@ -175,6 +177,7 @@ export default function SourcePage() {
         )}
         headerActions={
           <Button
+            className="cursor-pointer"
             variant="outline"
             aria-label="Add new source"
             size="lg"

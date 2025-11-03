@@ -40,7 +40,7 @@ export function SessionExpiredModal() {
           </DialogDescription>
         </DialogHeader>
         <div className="flex justify-end">
-          <Button onClick={handleLogout}>Go to Login</Button>
+          <Button className="cursor-pointer" onClick={handleLogout}>Go to Login</Button>
         </div>
       </DialogContent>
     </Dialog>
